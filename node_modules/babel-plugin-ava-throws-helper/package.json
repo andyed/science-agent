@@ -1,0 +1,34 @@
+{
+  "name": "babel-plugin-ava-throws-helper",
+  "version": "0.0.4",
+  "description": "My cool module",
+  "license": "MIT",
+  "repository": "jamestalmage/babel-plugin-throws-helper",
+  "author": {
+    "name": "James Talmage",
+    "email": "james@talmage.io",
+    "url": "github.com/jamestalmage"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "scripts": {
+    "test": "xo && ava",
+    "preversion": "WRITE_EXAMPLES=1 npm run test && git add example-output.md"
+  },
+  "files": [
+    "index.js"
+  ],
+  "keywords": [
+    ""
+  ],
+  "dependencies": {
+    "babel-template": "^6.7.0",
+    "babel-types": "^6.7.2"
+  },
+  "devDependencies": {
+    "ava": "^0.14.0",
+    "babel-core": "^6.7.5",
+    "xo": "^0.13.0"
+  }
+}

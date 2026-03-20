@@ -1,0 +1,44 @@
+{
+  "name": "not-so-shallow",
+  "version": "0.1.4",
+  "description": "A less shallow `only-shallow`",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sotojuan/not-so-shallow"
+  },
+  "author": {
+    "name": "Juan Soto",
+    "email": "juan@juansoto.me",
+    "url": "juansoto.me"
+  },
+  "scripts": {
+    "test": "standard --verbose | snazzy && ava --verbose"
+  },
+  "files": [
+    "index.js"
+  ],
+  "keywords": [
+    "deeper",
+    "deepest",
+    "deepEqual",
+    "shallow",
+    "equal",
+    "equality",
+    "strict"
+  ],
+  "dependencies": {
+    "buffer-equals": "^1.0.3"
+  },
+  "devDependencies": {
+    "ava": "^0.16.0",
+    "cz-conventional-changelog": "^1.1.6",
+    "snazzy": "^4.0.0",
+    "standard": "^7.1.2"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
+}
