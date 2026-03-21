@@ -1,7 +1,7 @@
-# Citation Guardian — Plan
+# Science Agent — Plan
 
 > **Status:** Planning
-> **Goal:** Standalone tool + Claude Code agent that validates academic citations against source documents, prevents AI confabulation in research writing
+> **Goal:** Improve scientific collaboration in AI-assisted research. Citation validation is capability #1; claim verification and research corpus management are next.
 
 ## Problem
 
@@ -21,7 +21,7 @@ A local-first citation database built from:
 
 The index maps: `(author_surname, year)` → `[{title, authors, doi, journal, volume, pages, local_pdf_path}]`
 
-### Mode 1: Claude Code Agent (`.claude/agents/citation-guardian.md`)
+### Mode 1: Claude Code Agent (`.claude/agents/science-agent.md`)
 
 An agent definition that can be invoked within Claude Code sessions:
 - `/citation-check` — audit all citations in current file or directory
@@ -41,17 +41,17 @@ A lightweight hook that watches for citation patterns in written content:
 ### Mode 3: Standalone CLI
 
 ```bash
-citation-guardian audit ./docs/specs/          # audit all citations in directory
-citation-guardian verify "Blauch 2026"         # look up specific citation
-citation-guardian add 10.1167/jov.25.3.15     # add paper by DOI
-citation-guardian index ./docs/research/       # index local PDF corpus
-citation-guardian diff refs.bib ./docs/specs/  # check BibTeX ↔ inline consistency
+science-agent audit ./docs/specs/          # audit all citations in directory
+science-agent verify "Blauch 2026"         # look up specific citation
+science-agent add 10.1167/jov.25.3.15     # add paper by DOI
+science-agent index ./docs/research/       # index local PDF corpus
+science-agent diff refs.bib ./docs/specs/  # check BibTeX ↔ inline consistency
 ```
 
 ## Data Model
 
 ```
-~/.citation-guardian/
+~/.science-agent/
   index.json          # citation index (author, title, year, doi, source)
   pdfs/               # local PDF corpus (optional)
   config.json         # API keys, project paths, thresholds
@@ -105,7 +105,7 @@ Each citation entry:
 ## Repo Structure
 
 ```
-citation-guardian/
+science-agent/
   src/
     index.js          # citation index CRUD
     audit.js          # scan files for citations, cross-reference
@@ -176,10 +176,10 @@ Claims are extracted → written to `claims.json` → user marks each `verified:
 On subsequent runs, only new/changed claims are flagged. Verified claims are cached with a content hash so they're re-flagged if the surrounding text changes.
 
 ```bash
-citation-guardian claims ./docs/           # extract all empirical claims
-citation-guardian claims --unverified      # show only unverified
-citation-guardian claims --inconsistent    # show cross-file conflicts
-citation-guardian claims --uncited         # show quantitative assertions without citations
+science-agent claims ./docs/           # extract all empirical claims
+science-agent claims --unverified      # show only unverified
+science-agent claims --inconsistent    # show cross-file conflicts
+science-agent claims --uncited         # show quantitative assertions without citations
 ```
 
 ### 4.4 Confidence Heuristics
@@ -199,7 +199,7 @@ Boost confidence if:
 
 - **Claude Code hook:** After any Write/Edit to `.tex`/`.md` files, extract new claims and warn if unverified
 - **Pre-commit hook:** Run `claims --unverified` and warn (don't block) if count increased
-- **CI:** `citation-guardian claims --exit-code` returns non-zero if any LOW-confidence unverified claims exist
+- **CI:** `science-agent claims --exit-code` returns non-zero if any LOW-confidence unverified claims exist
 
 ## MVP Scope
 
