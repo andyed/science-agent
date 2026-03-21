@@ -123,6 +123,84 @@ citation-guardian/
   CLAUDE.md
 ```
 
+## Phase 4: Claim Auditor (Content Accuracy)
+
+> **Origin:** Citation-guardian v1 catches structural errors (wrong titles, missing DOIs).
+> It cannot catch *semantic* errors: wrong numbers attributed to real papers, mechanism
+> descriptions that don't match what the paper actually says, or uncited empirical claims.
+> In the Scrutinizer audit (2026-03-19), 4 of the 9 urgent issues were semantic — correct
+> citation, wrong claim: Curcio photoreceptor count off by 10x, Queen N=20 was actually N=10,
+> Kuffler cited for DoG model he didn't formalize, SNIF-ACT mechanism misdescribed.
+
+### 4.1 Claim Extractor (`src/claims.js`)
+
+Scans `.tex`, `.md`, `.js`, `.frag` files for empirical claim patterns near citations:
+
+**Pattern types:**
+1. **Quantitative claims** — numbers near citations: `N=20`, `~0.5s`, `4-5x`, `2:1 ratio`, percentages, degree values. Regex: `/[\d.]+[x×%°]|[Nn]\s*[=≈~]\s*\d+/` within ±200 chars of a citation.
+2. **Mechanism claims** — "showed that", "demonstrated", "found that", "established", "measured" followed by a declarative clause, near a citation.
+3. **Parameter attributions** — `param = value` or `param: value` near a `(Author Year)` pattern. E.g., `a = 2.78 (Blauch 2026)`.
+4. **Uncited empirical claims** — sentences containing quantitative assertions with no citation within ±300 chars. Heuristic: sentence has a number + a domain-specific noun (eccentricity, sensitivity, acuity, threshold, etc.) but no `\cite`, `(Author`, or footnote.
+
+**Output:** For each claim:
+```json
+{
+  "file": "peripheral.frag",
+  "line": 724,
+  "claim_text": "at 15 deg, RG approx 29%, YV approx 79%",
+  "citation": "Bowers (2025)",
+  "claim_type": "quantitative",
+  "numbers": ["15", "29%", "79%"],
+  "confidence": "low",
+  "verified": false
+}
+```
+
+### 4.2 Cross-File Consistency Checker (`src/consistency.js`)
+
+Detects when the same parameter or finding is stated differently across files:
+
+1. Extract all `(parameter, value, citation)` tuples across the codebase
+2. Group by parameter name + citation
+3. Flag groups where values disagree
+
+**Known example:** `rg_decay` is 0.072 in `peripheral.frag:70` and 0.085 in `chromatic_pooling.md`. Both attribute to Bowers (2025). Can't both be right.
+
+Also catches:
+- Oblique effect fade "~10 deg" (shader) vs "8-18 deg" (spec)
+- Bouma constant "~0.5" vs "0.75" (different papers but same concept — link them)
+
+### 4.3 Verification Workflow
+
+Claims are extracted → written to `claims.json` → user marks each `verified: true/false/fixed`.
+On subsequent runs, only new/changed claims are flagged. Verified claims are cached with a content hash so they're re-flagged if the surrounding text changes.
+
+```bash
+citation-guardian claims ./docs/           # extract all empirical claims
+citation-guardian claims --unverified      # show only unverified
+citation-guardian claims --inconsistent    # show cross-file conflicts
+citation-guardian claims --uncited         # show quantitative assertions without citations
+```
+
+### 4.4 Confidence Heuristics
+
+Auto-assign confidence levels:
+- **LOW** (verify urgently): specific number + recent paper (≥2020) + no DOI provenance in research log
+- **LOW**: number from blog post or non-peer-reviewed source
+- **MEDIUM**: well-known finding but specific number (ratios, thresholds, sample sizes)
+- **HIGH**: textbook-level claim (center-surround, Bouma's law direction, etc.)
+
+Boost confidence if:
+- The citation's URL appears in the research log (paper was actually fetched/read)
+- The citation has a verified DOI matching CrossRef metadata
+- The claim appears in the paper's abstract (available via Semantic Scholar API)
+
+### 4.5 Integration Points
+
+- **Claude Code hook:** After any Write/Edit to `.tex`/`.md` files, extract new claims and warn if unverified
+- **Pre-commit hook:** Run `claims --unverified` and warn (don't block) if count increased
+- **CI:** `citation-guardian claims --exit-code` returns non-zero if any LOW-confidence unverified claims exist
+
 ## MVP Scope
 
 Phase 1 (ship fast):

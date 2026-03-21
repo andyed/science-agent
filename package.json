@@ -1,16 +1,16 @@
 {
-  "name": "citation-guardian",
+  "name": "science-agent",
   "version": "0.1.0",
-  "description": "Detect AI-confabulated academic citations. Audits inline references against BibTeX, verifies DOIs via CrossRef, flags orphans and ambiguous citations.",
+  "description": "Improve scientific collaboration in AI-assisted research. Citation validation, claim verification, cross-file consistency.",
   "main": "cli.js",
   "bin": {
-    "citation-guardian": "./cli.js"
+    "science-agent": "./cli.js"
   },
   "scripts": {
     "audit": "node cli.js audit",
     "test": "node cli.js audit ./test-fixtures --bibtex=./test-fixtures/refs.bib"
   },
-  "keywords": ["citation", "academic", "confabulation", "ai", "verification", "bibtex", "crossref"],
+  "keywords": ["science", "citation", "academic", "confabulation", "ai", "verification", "bibtex", "crossref", "research"],
   "author": "Andy Edmonds <andyed@gmail.com>",
   "license": "MIT",
   "type": "commonjs",
