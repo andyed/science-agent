@@ -9,7 +9,7 @@ const https = require('https');
 function verifyDOI(doi) {
     return new Promise((resolve) => {
         const url = `https://api.crossref.org/works/${encodeURIComponent(doi)}`;
-        const req = https.get(url, { headers: { 'User-Agent': 'citation-guardian/0.1 (https://github.com/andyed/citation-guardian)' } }, (res) => {
+        const req = https.get(url, { headers: { 'User-Agent': 'science-agent/0.1 (https://github.com/andyed/science-agent)' } }, (res) => {
             let data = '';
             res.on('data', chunk => data += chunk);
             res.on('end', () => {
@@ -43,7 +43,7 @@ function searchByTitle(title) {
     return new Promise((resolve) => {
         const query = encodeURIComponent(title);
         const url = `https://api.crossref.org/works?query.bibliographic=${query}&rows=3`;
-        const req = https.get(url, { headers: { 'User-Agent': 'citation-guardian/0.1' } }, (res) => {
+        const req = https.get(url, { headers: { 'User-Agent': 'science-agent/0.1' } }, (res) => {
             let data = '';
             res.on('data', chunk => data += chunk);
             res.on('end', () => {

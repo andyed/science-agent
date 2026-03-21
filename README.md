@@ -16,7 +16,7 @@ Drop `agent.md` into your project's `.claude/agents/` directory:
 
 ```bash
 mkdir -p .claude/agents
-cp path/to/citation-guardian/agent.md .claude/agents/citation-guardian.md
+cp path/to/science-agent/agent.md .claude/agents/science-agent.md
 ```
 
 Then in Claude Code:
@@ -28,8 +28,8 @@ Then in Claude Code:
 
 ```bash
 # Install
-git clone https://github.com/andyed/citation-guardian.git
-cd citation-guardian && npm install
+git clone https://github.com/andyed/science-agent.git
+cd science-agent && npm install
 
 # Audit citations in a directory against a BibTeX file
 node cli.js audit ./docs/specs --bibtex=./refs.bib
@@ -44,7 +44,7 @@ node cli.js search "Metamers of the ventral stream"
 ### Audit Output
 
 ```
-═══ Citation Guardian Audit ═══
+═══ Science Agent Audit ═══
 
   Directory: ./docs/specs
   BibTeX:    ./refs.bib

@@ -29,18 +29,18 @@ For every academic citation you encounter or generate:
 - **Glob** — Find all files containing citations
 - **WebFetch** — Verify DOIs via CrossRef API (`https://api.crossref.org/works/{doi}`)
 - **WebSearch** — Find correct citations when the local version is suspect
-- **Bash** — Run `citation-guardian` CLI commands:
+- **Bash** — Run `science-agent` CLI commands:
   ```bash
-  citation-guardian audit <dir> --bibtex=<path>   # full audit
-  citation-guardian verify <doi>                   # check one DOI
-  citation-guardian search "title query"           # find the real paper
+  science-agent audit <dir> --bibtex=<path>   # full audit
+  science-agent verify <doi>                   # check one DOI
+  science-agent search "title query"           # find the real paper
   ```
 
 ## When to activate
 
 - **Before any commit** that adds or modifies citations in `.md`, `.tex`, `.html`, or `.bib` files
 - **When asked to write a literature review** or add references to a document
-- **When the user says** "check citations", "verify references", "audit", or "citation-guardian"
+- **When the user says** "check citations", "verify references", "audit", or "science-agent"
 - **Proactively** when you notice a citation pattern in text you're writing — pause and verify before outputting
 
 ## How to verify a citation

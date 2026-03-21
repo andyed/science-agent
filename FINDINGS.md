@@ -1,7 +1,7 @@
 # AI Citation Confabulation: Findings from the Scrutinizer Corpus
 
 > **Share this document.** It's the full audit with methodology, data, and patterns.
-> The [citation-guardian](https://github.com/andyed/citation-guardian) tool was built in response to these findings.
+> The [science-agent](https://github.com/andyed/science-agent) tool was built in response to these findings.
 
 ## What happened
 
@@ -116,17 +116,17 @@ Three patterns not seen in the first audit:
 
 1. **Require DOI for every citation.** Strongest protective factor (0% error rate). A DOI is a verifiable link to the canonical record.
 2. **Expand "et al."** — always list full author names. The shorthand hides confabulated co-authors.
-3. **Verify against CrossRef.** `citation-guardian verify <doi>` checks a DOI in seconds.
+3. **Verify against CrossRef.** `science-agent verify <doi>` checks a DOI in seconds.
 4. **Disambiguate prolific authors.** "Rosenholtz 2012" is not a citation — it's an ambiguous pointer to 3 different papers. Add the journal or DOI.
 
 ### What we built
 
-**[citation-guardian](https://github.com/andyed/citation-guardian)** — a CLI tool that:
+**[science-agent](https://github.com/andyed/science-agent)** — a CLI tool that:
 
 ```bash
-citation-guardian audit ./docs --bibtex=refs.bib    # find orphans, ambiguous citations
-citation-guardian verify 10.1167/jov.25.11.7        # check a DOI against CrossRef
-citation-guardian search "chromatic sensitivity"     # find the real paper
+science-agent audit ./docs --bibtex=refs.bib    # find orphans, ambiguous citations
+science-agent verify 10.1167/jov.25.11.7        # check a DOI against CrossRef
+science-agent search "chromatic sensitivity"     # find the real paper
 ```
 
 Built in response to this audit. Open source (MIT). Node.js, CrossRef API, fuzzy title matching.
@@ -145,5 +145,5 @@ The fix isn't "don't use AI for research." The fix is "verify the 5% the AI is m
 ---
 
 **Project:** [Scrutinizer](https://github.com/andyed/scrutinizer2025) — open-source peripheral vision simulator
-**Tool:** [citation-guardian](https://github.com/andyed/citation-guardian) — detect AI-confabulated citations
+**Tool:** [science-agent](https://github.com/andyed/science-agent) — detect AI-confabulated citations
 **Author:** Andy Edmonds ([@andyed](https://github.com/andyed))

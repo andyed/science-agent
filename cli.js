@@ -2,17 +2,17 @@
 'use strict';
 
 /**
- * citation-guardian — Detect AI-confabulated academic citations
+ * science-agent — Detect AI-confabulated academic citations
  *
  * Usage:
- *   citation-guardian audit <dir> --bibtex=<path>    Audit citations against BibTeX
- *   citation-guardian verify <doi>                    Verify a DOI against CrossRef
- *   citation-guardian search "title query"            Search CrossRef by title
+ *   science-agent audit <dir> --bibtex=<path>    Audit citations against BibTeX
+ *   science-agent verify <doi>                    Verify a DOI against CrossRef
+ *   science-agent search "title query"            Search CrossRef by title
  *
  * Examples:
- *   citation-guardian audit ./docs/specs --bibtex=./docs/arxiv-paper/references.bib
- *   citation-guardian verify 10.1167/jov.25.3.15
- *   citation-guardian search "Chromatic sensitivity across the visual field"
+ *   science-agent audit ./docs/specs --bibtex=./docs/arxiv-paper/references.bib
+ *   science-agent verify 10.1167/jov.25.3.15
+ *   science-agent search "Chromatic sensitivity across the visual field"
  */
 
 const path = require('path');
@@ -23,12 +23,12 @@ const command = args[0];
 
 function usage() {
     console.log(`
-citation-guardian — Detect AI-confabulated academic citations
+science-agent — Detect AI-confabulated academic citations
 
 Usage:
-  citation-guardian audit <dir> --bibtex=<path>    Audit citations against BibTeX
-  citation-guardian verify <doi>                    Verify a DOI against CrossRef
-  citation-guardian search "title query"            Search CrossRef by title
+  science-agent audit <dir> --bibtex=<path>    Audit citations against BibTeX
+  science-agent verify <doi>                    Verify a DOI against CrossRef
+  science-agent search "title query"            Search CrossRef by title
 
 Options:
   --json           Output as JSON
@@ -72,7 +72,7 @@ async function main() {
         }
 
         // Pretty print
-        console.log(`\n═══ Citation Guardian Audit ═══\n`);
+        console.log(`\n═══ Science Agent Audit ═══\n`);
         console.log(`  Directory: ${path.resolve(dir)}`);
         console.log(`  BibTeX:    ${path.resolve(bibtex)}`);
         console.log(`  Citations: ${result.stats.total}`);
@@ -108,7 +108,7 @@ async function main() {
     } else if (command === 'verify') {
         const doi = positional[0];
         if (!doi) {
-            console.error('Error: DOI required. Usage: citation-guardian verify 10.1167/jov.25.3.15');
+            console.error('Error: DOI required. Usage: science-agent verify 10.1167/jov.25.3.15');
             process.exit(1);
         }
 
