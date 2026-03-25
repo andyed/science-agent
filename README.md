@@ -2,7 +2,7 @@
 
 Improve scientific collaboration in AI-assisted research projects.
 
-> A README linked to [PMID 12078741](https://pubmed.ncbi.nlm.nih.gov/12078741/) as the foundational paper on Restricted Focus Viewers in vision science. The actual paper at that ID? "Determination of true ileal amino acid digestibility... in barley samples for growing-finishing pigs." The correct PMID was 12723780 — off by 645,039. Nobody checked.
+> A README linked to [PMID 12078741](https://pubmed.ncbi.nlm.nih.gov/12078741/) as the foundational paper on Restricted Focus Viewers in vision science. The actual paper at that ID? "Determination of true ileal amino acid digestibility... in barley samples for growing-finishing pigs." The correct PMID was 12723780 — off by 645,039.
 
 ## Why
 
