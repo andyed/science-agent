@@ -6,6 +6,7 @@
  *
  * Usage:
  *   science-agent audit <dir> --bibtex=<path>    Audit citations against BibTeX
+ *   science-agent arxiv [count] [--cat=cs.AI]     Audit recent arXiv papers
  *   science-agent verify <doi>                    Verify a DOI against CrossRef
  *   science-agent search "title query"            Search CrossRef by title
  *
@@ -27,6 +28,7 @@ science-agent — Detect AI-confabulated academic citations
 
 Usage:
   science-agent audit <dir> --bibtex=<path>    Audit citations against BibTeX
+  science-agent arxiv [count] [--cat=cs.AI]     Audit recent arXiv papers
   science-agent verify <doi>                    Verify a DOI against CrossRef
   science-agent search "title query"            Search CrossRef by title
 
@@ -104,6 +106,58 @@ async function main() {
         // Exit code
         const errors = result.issues.filter(i => i.severity === 'error').length;
         if (errors > 0) process.exit(1);
+
+    } else if (command === 'arxiv') {
+        const count = parseInt(positional[0]) || 10;
+        const category = flags.cat || 'cs.AI';
+
+        const { auditArxiv } = require('./src/arxiv');
+        console.log(`\n═══ Science Agent: arXiv Audit ═══`);
+        console.log(`Checking references in the ${count} most recent ${category} papers\n`);
+
+        const result = await auditArxiv(count, { category });
+
+        if (flags.json) {
+            console.log(JSON.stringify(result, null, 2));
+            return;
+        }
+
+        for (const p of result.papers) {
+            if (p.skipped) {
+                console.log(`\n── ${p.id}: ${p.title.slice(0, 70)}...`);
+                console.log(`   ${p.authors.slice(0, 3).join(', ')}${p.authors.length > 3 ? ' et al.' : ''}`);
+                console.log(`   (${p.skipped})`);
+            } else {
+                console.log(`\n── ${p.id}: ${p.title.slice(0, 70)}...`);
+                console.log(`   ${p.authors.slice(0, 3).join(', ')}${p.authors.length > 3 ? ' et al.' : ''}`);
+                console.log(`   ${p.refs} references | Verified: ${p.verified} | Issues: ${p.issues}${p.skippedArxivDOIs > 0 ? ` (${p.skippedArxivDOIs} arXiv DOIs skipped)` : ''}`);
+            }
+        }
+
+        console.log(`\n\n═══ Summary ═══`);
+        console.log(`Papers audited:     ${result.stats.papersAudited}`);
+        console.log(`Total references:   ${result.stats.totalRefs}`);
+        console.log(`References checked: ${result.stats.refsChecked}`);
+        console.log(`Issues found:       ${result.stats.issuesFound}`);
+        console.log(`Issue rate:         ${(result.stats.issueRate * 100).toFixed(1)}%`);
+
+        if (result.issues.length > 0) {
+            console.log(`\n── Issues ──\n`);
+            for (const i of result.issues) {
+                console.log(`  ✗ [${i.issue}] ${i.paper}`);
+                console.log(`    ${i.ref}`);
+                if (i.claimed) console.log(`    claimed: ${i.claimed}`);
+                if (i.actual) console.log(`    actual:  ${i.actual}`);
+                if (i.bestMatch) console.log(`    best match: ${i.bestMatch}`);
+                if (i.doi) console.log(`    DOI: ${i.doi}`);
+                if (i.similarity !== undefined) console.log(`    similarity: ${i.similarity}`);
+                console.log('');
+            }
+        } else {
+            console.log(`\n  ✓ No citation issues detected.`);
+        }
+
+        if (result.stats.issuesFound > 0) process.exit(1);
 
     } else if (command === 'verify') {
         const doi = positional[0];

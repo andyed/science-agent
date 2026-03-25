@@ -138,6 +138,57 @@ Built in response to this audit. Open source (MIT). Node.js, CrossRef API, fuzzy
 - AI tools distinguishing "I know this citation" from "I'm generating a plausible citation" — current architectures can't make this distinction, but the failure mode should be documented
 - Academic style guides updated for AI-assisted writing: "verify every citation against its DOI" as a checklist item
 
+## Replication: ClickSense corpus (2026-03-22)
+
+The Scrutinizer audit raised the question: is this a domain-specific problem (vision science is niche, maybe the model's training data is thin) or a systemic one? We ran the same audit methodology on a second project — [ClickSense](https://github.com/andyed/clicksense), a mouse click dynamics library — covering HCI, motor control, and cognitive psychology literature. Different domain, different papers, different co-author.
+
+### The corpus
+
+- **Project:** ClickSense — mousedown-to-mouseup hold duration as cognitive signal
+- **Three documents audited:**
+  - `clicksense-paper.md` (human-written, 4 citations) — **0% error rate**
+  - `RELATED_PARADIGMS.md` (human-written with AI assist, 14 citations) — **7% error rate** (1 wrong vol/pages)
+  - `related-paradigms.md` (AI-generated research survey, 25 citations) — **24% error rate** (6 errors)
+
+### What we found
+
+**AI-generated document (related-paradigms.md):** 6 of 25 citations had errors.
+
+| Citation | Error Type | What Happened |
+|----------|-----------|---------------|
+| "Shadmehr et al. 2025" TICS | **Wrong authors** | Paper is by Thura, Haith, Derosiere & Duque. Model assigned it to the most famous researcher in the vigor field. |
+| Yoon et al. 2018 | **Wrong venue + title** | Published in PNAS, not JEEA. Title was confabulated. |
+| "Davarpanah Jazi & Heath 2017" | **Wrong authors** | Article 11703 in Sci Rep is by Nashed, Diamond, Gallivan, Wolpert & Flanagan. |
+| "Pantic & Rothkrantz 2004" BIT | **Wrong authors** | That BIT paper is by Macaulay. Pantic & Rothkrantz published a different paper (IEEE, 2003). |
+| "Kaixin et al. 2024" ACM | **Fabricated first author** | First author is Khan (Simon Khan). "Kaixin" doesn't appear among the authors. |
+| "Freihaut & Göritz 2022" | **Wrong year, volume, pages, author count** | Published 2021 not 2022, vol 53 not 54, 4 authors not 2. |
+
+**Human-written documents:** 1 error across 18 citations (Yu et al. 2012 had wrong volume/issue/pages in the original RELATED_PARADIGMS.md). The human-written clicksense-paper.md had 4 citations, all verified clean against CrossRef.
+
+**Commercial repo paper (i2lab/clicksense):** 14 citations, 1 error — Azzopardi et al. cited as 2013/36th SIGIR, actually 2018/41st SIGIR. This is a human memory error (wrong year), not an AI confabulation pattern.
+
+### The pattern replicates
+
+| Pattern | Scrutinizer | ClickSense |
+|---------|------------|------------|
+| 95/5 rule (right paper, wrong metadata) | Yes | Yes |
+| Famous-author misattribution | Blauch given wrong co-author order | Shadmehr attributed a paper he didn't write |
+| Compound confabulation (two papers merged) | Barbot + Jigo merged into one | Pantic & Rothkrantz (IEEE 2003) merged with Macaulay (BIT 2004) |
+| First name fabrication | Norick→Nils, Zhuohan→Yijun | "Kaixin" (doesn't exist) for Khan |
+| Venue swap | — | PNAS paper cited as JEEA |
+| Year/volume drift | DOI resolved to wrong paper | 2021→2022, vol 53→54 |
+| Human-written vs AI-generated | 12% in BibTeX (AI-generated) | 0% human-only, 24% AI-generated |
+
+### New findings from the replication
+
+1. **The error rate scales with AI involvement.** Human-written citations: ~4-7% error rate (mostly minor). AI-generated research surveys: 24% error rate with wrong author attributions. The more the AI writes without human verification, the worse it gets.
+
+2. **Famous-author gravity.** The model attributes papers to the most prominent researcher in a field, even when they're not an author. Shadmehr didn't write the 2025 TICS paper on vigor co-regulation — but he wrote the foundational work, so the model assumes he's on every vigor paper. Same pattern as Scrutinizer: Carrasco lab papers merged because Carrasco is the most cited name in the peripheral vision field.
+
+3. **This is not domain-specific.** Vision science, HCI, motor control, cognitive psychology — four different subfields, same failure modes. The confabulation patterns are properties of the language model, not properties of any particular training data gap.
+
+4. **The fix works across domains.** CrossRef DOI verification caught every error in both corpora. The `science-agent verify` workflow is domain-agnostic.
+
 ## The closing observation
 
 The fix isn't "don't use AI for research." The fix is "verify the 5% the AI is most likely to get wrong." In our corpus, that's co-author lists, exact titles, and article numbers. A DOI resolves all three. The cost of adding a DOI to every citation is trivial. The cost of propagating fabricated references through the scientific literature is not.
