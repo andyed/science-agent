@@ -20,6 +20,20 @@ AI coding assistants confabulate academic citations at a measurable rate. The mo
 
 This isn't a future risk. Confabulated citations are entering the scholarly record now.
 
+## Try it now
+
+```bash
+npx github:andyed/science-agent audit ./docs
+```
+
+Or verify a single DOI against CrossRef:
+
+```bash
+npx github:andyed/science-agent verify 10.1038/nn.2889
+```
+
+No install, no clone — runs straight from this repo.
+
 ### Why it happens
 
 The model has distributional knowledge of a research field but can't maintain boundaries between individual papers. It knows the Carrasco lab publishes on peripheral vision, so it merges two Carrasco papers into one fake citation with the right first author + the wrong paper's article number + a fabricated title that sounds like a plausible blend of both ([compound confabulation](FINDINGS.md#barbot-et-al-2021--compound-confabulation)). It knows Shadmehr is the most prominent name in motor vigor research, so it attributes a paper to him that he didn't write ([famous-author gravity](FINDINGS.md#new-findings-from-the-replication)).
@@ -52,8 +66,9 @@ Science Agent automates this.
 Drop `agent.md` into your project's `.claude/agents/` directory:
 
 ```bash
+git clone https://github.com/andyed/science-agent.git
 mkdir -p .claude/agents
-cp path/to/science-agent/agent.md .claude/agents/science-agent.md
+cp science-agent/agent.md .claude/agents/science-agent.md
 ```
 
 Then in Claude Code:
@@ -130,7 +145,7 @@ node cli.js search "Metamers of the ventral stream"
 ### Next
 - **Claim verification** — detect wrong numbers attributed to real papers, cross-file consistency for shared parameters
 - **Research corpus index** — catalog local PDFs with extracted metadata, track what's been read
-- **npm package** — `npx science-agent audit ./docs`
+- **npm package** — `npx @andyed/science-agent audit ./docs`
 - **MCP server** — tools for any MCP client
 
 ## Validation: arXiv spot-check
@@ -167,6 +182,7 @@ Run it yourself: `node cli.js arxiv 10` audits the latest papers in real time.
 | [CiteAudit](https://arxiv.org/abs/2602.23452) | Multi-agent verification pipeline + web service | Not open source. Science-agent is local-first, CLI, and embeds in your dev workflow |
 | [CiteME](https://arxiv.org/abs/2407.12861) | Benchmark: can LLMs identify source papers from excerpts? | Benchmark, not a tool. Different task (retrieval vs. verification) |
 | [Context Rot](https://github.com/chroma-core/context-rot) | Measures general LLM degradation with context length | Methodology foundation for understanding why hallucination worsens under load |
+| [Claude Scholar](https://github.com/Galaxy-Dawn/claude-scholar) | Full research lifecycle config for Claude Code (47 skills, ideation → publication) | Workflow orchestrator with prompt-based citation checking. Science-agent could serve as its verification backend via MCP |
 
 ## Origin
 
