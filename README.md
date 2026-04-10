@@ -184,6 +184,12 @@ Run it yourself: `node cli.js arxiv 10` audits the latest papers in real time.
 | [Context Rot](https://github.com/chroma-core/context-rot) | Measures general LLM degradation with context length | Methodology foundation for understanding why hallucination worsens under load |
 | [Claude Scholar](https://github.com/Galaxy-Dawn/claude-scholar) | Full research lifecycle config for Claude Code (47 skills, ideation → publication) | Workflow orchestrator with prompt-based citation checking. Science-agent could serve as its verification backend via MCP |
 
+![Go-go gadget peer review](assets/gogogadget-peer-review.png)
+
+*The arms are AI. The microscope is yours.*
+
+[**andre-inter-collab-llc/research-workflow-assistant**](https://github.com/andre-inter-collab-llc/research-workflow-assistant) — André Nogueira's open-source Research Workflow Assistant: a VS Code + GitHub Copilot stack of custom agents and MCP servers (PubMed, OpenAlex, Semantic Scholar, Europe PMC, CrossRef, Zotero) for systematic reviews, academic writing, data analysis, and ICMJE-compliant authorship. Different domain from this project (biomedical research workflows vs citation verification), same underlying bet: researchers already have VS Code, git, Python, R, Quarto, and Markdown — give them an LLM with the right agent scaffolding and they can assemble their own compliant research assistants in weeks instead of waiting for a platform. Science-agent is built on similar principles (Claude Code agent discipline, conventional-commit workflow, FINDINGS.md as a first-class audit artifact) but targeted at the narrow problem of catching AI-fabricated citations rather than a generic multi-domain workflow; RWA is the systematic, biomedical-workflows version of the same idea.
+
 ## Origin
 
 Built after discovering AI-confabulated citations in [Scrutinizer](https://github.com/andyed/scrutinizer2025), an open-source peripheral vision simulator. A collaborator checked the arxiv reference to his own paper during a meeting and found the title was wrong. The [full audit](FINDINGS.md) revealed systematic patterns that replicated across a second project in a different domain.
