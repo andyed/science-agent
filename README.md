@@ -38,9 +38,13 @@ Catches AI-confabulated academic citations before they ship. Verifies inline ref
 Audits `[NB##:K##]` claim references in research prose — the convention where quantitative findings are traced to specific rows in notebook Key Claims blocks:
 
 ```bash
+# Generate aggregate from notebooks (one-time setup)
+science-agent aggregate ./notebooks/ -o docs/notebook-key-claims.md
+
+# Audit all claim references in prose
 science-agent notebook-audit ./docs \
   --aggregate=./docs/notebook-key-claims.md \
-  --notebooks=./notebooks-v2 \
+  --notebooks=./notebooks/ \
   --cross-repo=../downstream-repo
 ```
 
@@ -78,6 +82,9 @@ node cli.js audit ./docs/specs --bibtex=./refs.bib
 
 # Audit notebook claim references
 node cli.js notebook-audit ./docs --aggregate=./docs/notebook-key-claims.md
+
+# Generate a Key Claims aggregate from notebooks
+node cli.js aggregate ./notebooks/ -o docs/notebook-key-claims.md
 
 # Audit recent arXiv papers (baseline check)
 node cli.js arxiv 10 --cat=cs.AI
