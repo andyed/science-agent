@@ -156,6 +156,21 @@ Scans `.tex`, `.md`, `.js`, `.frag` files for empirical claim patterns near cita
 }
 ```
 
+### 4.1b Notebook Key Claims Auditor (`src/notebook-audit.js`)
+
+Validates that research notebooks follow the contract defined in [`docs/notebook-conventions.md`](docs/notebook-conventions.md):
+
+1. Every Tier-A notebook has a Key Claims block with stable K-IDs
+2. Every `[NB##:K##]` reference in prose resolves to an existing claim row
+3. Cited values match the canonical aggregate (`notebook-key-claims.md`)
+4. Declared claims in CHANGELOGs/READMEs correspond to computed values (not just quoted strings)
+5. Cross-repo references (downstream repos citing upstream claims) are current post-corrections
+
+```bash
+science-agent notebook-audit ./                     # audit current repo
+science-agent notebook-audit --cross-repo ../approach-retreat ../pupil-lfhf
+```
+
 ### 4.2 Cross-File Consistency Checker (`src/consistency.js`)
 
 Detects when the same parameter or finding is stated differently across files:

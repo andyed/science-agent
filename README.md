@@ -143,7 +143,8 @@ node cli.js search "Metamers of the ventral stream"
 - **CLI** — `audit`, `verify`, `search` commands
 
 ### Next
-- **Claim verification** — detect wrong numbers attributed to real papers, cross-file consistency for shared parameters
+- **Claim verification** — detect wrong numbers attributed to real papers, cross-file consistency for shared parameters, stale cross-repo references. See [`docs/notebook-conventions.md`](docs/notebook-conventions.md) for the notebook contract that claim verification audits against.
+- **Notebook audit** — verify that research notebooks follow the Key Claims block convention: stable K-IDs, values from execution, cross-repo consistency
 - **Research corpus index** — catalog local PDFs with extracted metadata, track what's been read
 - **npm package** — `npx @andyed/science-agent audit ./docs`
 - **MCP server** — tools for any MCP client
