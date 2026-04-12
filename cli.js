@@ -35,6 +35,8 @@ Usage:
     --aggregate=<path>                            Path to notebook-key-claims.md
     --notebooks=<dir>                             Path to notebooks directory
     --cross-repo=<dir>                            Scan downstream repo for stale values
+  science-agent aggregate <notebooks-dir>       Generate key-claims aggregate
+    -o <path>                                     Output file (default: stdout)
 
 Options:
   --json           Output as JSON
@@ -48,10 +50,14 @@ async function main() {
 
     const flags = {};
     const positional = [];
-    for (const arg of args.slice(1)) {
+    const slicedArgs = args.slice(1);
+    for (let i = 0; i < slicedArgs.length; i++) {
+        const arg = slicedArgs[i];
         if (arg.startsWith('--')) {
             const [key, val] = arg.slice(2).split('=');
             flags[key] = val || true;
+        } else if (arg === '-o' && i + 1 < slicedArgs.length) {
+            flags.o = slicedArgs[++i];
         } else {
             positional.push(arg);
         }
@@ -215,6 +221,39 @@ async function main() {
                 console.log(`  ${r.authors.slice(0, 3).join('; ')}${r.authors.length > 3 ? ' et al.' : ''}`);
                 console.log(`  ${r.year}\n`);
             }
+        }
+
+    } else if (command === 'aggregate') {
+        const dir = positional[0];
+        if (!dir) {
+            console.error('Error: notebooks directory required. Usage: science-agent aggregate ./notebooks/');
+            process.exit(1);
+        }
+        if (!fs.existsSync(dir)) {
+            console.error(`Error: directory not found: ${dir}`);
+            process.exit(1);
+        }
+
+        const { aggregate, formatMarkdown } = require('./src/aggregate');
+        const result = aggregate(path.resolve(dir));
+
+        if (flags.json) {
+            console.log(JSON.stringify(result, null, 2));
+            return;
+        }
+
+        const md = formatMarkdown(result);
+
+        if (flags.o) {
+            fs.writeFileSync(flags.o, md);
+            console.log(`\n═══ Science Agent: Aggregate ═══\n`);
+            console.log(`  Notebooks scanned: ${result.stats.notebooksScanned}`);
+            console.log(`  With Key Claims:   ${result.stats.notebooksWithClaims}`);
+            console.log(`  Without:           ${result.stats.notebooksWithout}`);
+            console.log(`  Total claims:      ${result.stats.totalClaims}`);
+            console.log(`\n  Written to: ${flags.o}\n`);
+        } else {
+            process.stdout.write(md);
         }
 
     } else if (command === 'notebook-audit') {
