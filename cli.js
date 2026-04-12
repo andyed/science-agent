@@ -31,6 +31,10 @@ Usage:
   science-agent arxiv [count] [--cat=cs.AI]     Audit recent arXiv papers
   science-agent verify <doi>                    Verify a DOI against CrossRef
   science-agent search "title query"            Search CrossRef by title
+  science-agent notebook-audit <dir>            Audit [NB##:K##] claim references
+    --aggregate=<path>                            Path to notebook-key-claims.md
+    --notebooks=<dir>                             Path to notebooks directory
+    --cross-repo=<dir>                            Scan downstream repo for stale values
 
 Options:
   --json           Output as JSON
@@ -212,6 +216,77 @@ async function main() {
                 console.log(`  ${r.year}\n`);
             }
         }
+
+    } else if (command === 'notebook-audit') {
+        const dir = positional[0] || '.';
+        const { auditNotebookClaims, auditCrossRepo } = require('./src/notebook-audit');
+
+        const result = auditNotebookClaims(path.resolve(dir), {
+            aggregatePath: flags.aggregate ? path.resolve(flags.aggregate) : null,
+            notebookDir: flags.notebooks ? path.resolve(flags.notebooks) : null,
+        });
+
+        if (flags.json) {
+            console.log(JSON.stringify(result, null, 2));
+            return;
+        }
+
+        console.log(`\n═══ Science Agent: Notebook Claims Audit ═══\n`);
+        console.log(`  Directory:        ${path.resolve(dir)}`);
+        console.log(`  Claim references: ${result.stats.totalRefs}`);
+        console.log(`  Unique notebooks: ${result.stats.uniqueNotebooks}`);
+        console.log(`  Unique claims:    ${result.stats.uniqueClaims}`);
+        console.log(`  Issues:           ${result.stats.issueCount}`);
+
+        if (result.notebookStatus.length > 0) {
+            console.log(`\n── Notebook Key Claims Status ──\n`);
+            for (const nb of result.notebookStatus) {
+                const icon = nb.hasBlock ? '✓' : '✗';
+                const detail = nb.hasBlock
+                    ? `${nb.claimCount} claims${nb.verifiedDate ? `, verified ${nb.verifiedDate}` : ''}`
+                    : 'no Key Claims block';
+                console.log(`  ${icon} ${nb.file}  (${detail})`);
+            }
+        }
+
+        if (result.issues.length > 0) {
+            console.log(`\n── Issues ──\n`);
+            for (const issue of result.issues) {
+                const icon = issue.severity === 'error' ? '✗' : '⚠';
+                const loc = issue.line ? `${issue.file}:${issue.line}` : issue.file;
+                console.log(`  ${icon} [${issue.type}] ${issue.ref || ''}`);
+                console.log(`    ${loc}`);
+                console.log(`    ${issue.message}\n`);
+            }
+        } else {
+            console.log(`\n  ✓ All claim references resolve correctly.\n`);
+        }
+
+        // Cross-repo scan
+        if (flags['cross-repo']) {
+            const crossDir = path.resolve(flags['cross-repo']);
+            console.log(`\n── Cross-repo scan: ${crossDir} ──\n`);
+
+            // Default stale values from the coordinate-space audit
+            const staleValues = [
+                { value: '0.827', message: 'Pre-fix M3 AUC (corrected to 0.792)', correction: '0.792' },
+                { value: '0.821', message: 'Pre-fix M4 AUC (corrected to 0.792)', correction: '0.792' },
+                { value: '994', message: 'Pre-fix evaluated-rejected N (corrected to 344)', correction: '344' },
+            ];
+
+            const crossResult = auditCrossRepo(crossDir, staleValues);
+            if (crossResult.issues.length > 0) {
+                for (const issue of crossResult.issues) {
+                    console.log(`  ⚠ ${issue.file}:${issue.line} — ${issue.message}`);
+                    if (issue.correction) console.log(`    → should be: ${issue.correction}`);
+                }
+            } else {
+                console.log(`  ✓ No stale values detected.\n`);
+            }
+        }
+
+        const errors = result.issues.filter(i => i.severity === 'error').length;
+        if (errors > 0) process.exit(1);
 
     } else {
         console.error(`Unknown command: ${command}`);
