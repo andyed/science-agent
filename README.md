@@ -35,8 +35,25 @@ Catches AI-confabulated academic citations before they ship. Verifies inline ref
 
 ### Notebook Claim Verification (shipped)
 
-Audits `[NB##:K##]` claim references in research prose — the convention where quantitative findings are traced to specific rows in notebook Key Claims blocks:
+Research notebooks produce numbers. Papers and READMEs cite those numbers. Over time, numbers drift — a notebook gets re-run with new data, but the prose still quotes the old value. Science Agent makes this auditable.
 
+**The idea:** Each notebook declares its load-bearing results in a `## Key Claims` table. Prose references them as `[NB14:K3]` (notebook 14, claim 3). Science Agent verifies every reference resolves to a real claim with a real value.
+
+```markdown
+## Key Claims
+
+| ID | Claim | Value | Verified |
+|----|-------|-------|----------|
+| K1 | Sample size after exclusions | N = 2,719 trials | 2026-04-09 |
+| K2 | Main effect | ρ = −0.618, p = 0.0426 | 2026-04-09 |
+```
+
+Then in your paper or README:
+```
+The position × cognitive load correlation [NB14:K2] suggests...
+```
+
+Audit it:
 ```bash
 # Generate aggregate from notebooks (one-time setup)
 science-agent aggregate ./notebooks/ -o docs/notebook-key-claims.md
@@ -53,7 +70,7 @@ Detects:
 - **Missing Key Claims blocks** — notebook is cited but has no auditable claims table
 - **Stale cross-repo values** — downstream repo quotes pre-fix numbers from upstream
 
-See [`docs/notebook-conventions.md`](docs/notebook-conventions.md) for the full notebook contract.
+If you don't use notebooks or don't need claim tracking, ignore this — `audit` and `verify` work standalone. If you do, see the full setup guide: **[docs/notebook-conventions.md](docs/notebook-conventions.md)**
 
 ### Works with any AI coding assistant
 
