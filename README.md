@@ -55,20 +55,42 @@ Detects:
 
 See [`docs/notebook-conventions.md`](docs/notebook-conventions.md) for the full notebook contract.
 
-### Claude Code Agent (shipped)
+### Works with any AI coding assistant
 
-Drop `agent.md` into your project's `.claude/agents/` directory:
+Science Agent is a CLI tool — any assistant that can run shell commands can use it. No API keys, no plugins, no vendor lock-in.
 
-```bash
-git clone https://github.com/andyed/science-agent.git
-mkdir -p .claude/agents
-cp science-agent/agent.md .claude/agents/science-agent.md
+**Claude Code:**
+```
+> check my citations against refs.bib
+# Claude runs: npx github:andyed/science-agent audit ./docs --bibtex=./refs.bib
 ```
 
-Then in Claude Code:
-- Ask "check my citations" or "audit references in docs/"
-- The agent activates automatically when it detects citation patterns
-- Uses WebFetch to verify DOIs against CrossRef — no install needed
+**ChatGPT / Codex / GitHub Copilot in terminal:**
+```
+> run science-agent to verify the citations in my paper
+# GPT runs: npx github:andyed/science-agent audit ./paper --bibtex=./references.bib
+```
+
+**Gemini Code Assist / Cursor / Windsurf / any terminal AI:**
+```
+> audit my bibtex citations for confabulation
+# Assistant runs: npx github:andyed/science-agent audit . --bibtex=./refs.bib
+```
+
+The pattern is the same everywhere: point at a directory of prose and a BibTeX file. The tool does the rest.
+
+For deeper integration, see [`agent.md`](agent.md) (Claude Code agent) or [`docs/github-actions.md`](docs/github-actions.md) (CI/CD).
+
+### Claude Code Agent (optional)
+
+Drop `agent.md` into your project's `.claude/agents/` directory for automatic activation:
+
+```bash
+mkdir -p .claude/agents
+curl -o .claude/agents/science-agent.md https://raw.githubusercontent.com/andyed/science-agent/main/agent.md
+```
+
+The agent activates when it detects citation patterns — uses WebFetch to verify DOIs against CrossRef, no install needed.
 
 ## CLI
 
