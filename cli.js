@@ -226,8 +226,19 @@ async function main() {
     } else if (command === 'aggregate') {
         const dir = positional[0];
         if (!dir) {
-            console.error('Error: notebooks directory required. Usage: science-agent aggregate ./notebooks/');
-            process.exit(1);
+            console.log(`
+  science-agent aggregate — Generate a Key Claims summary from Jupyter notebooks
+
+  Usage: science-agent aggregate <notebooks-dir> [-o <output.md>]
+
+  This scans .ipynb files for "## Key Claims" sections and compiles them
+  into a single reference file. Other commands (notebook-audit) use this
+  aggregate to verify claim references in prose.
+
+  Example:
+    science-agent aggregate ./notebooks/ -o docs/key-claims.md
+`);
+            process.exit(0);
         }
         if (!fs.existsSync(dir)) {
             console.error(`Error: directory not found: ${dir}`);
@@ -236,6 +247,19 @@ async function main() {
 
         const { aggregate, formatMarkdown } = require('./src/aggregate');
         const result = aggregate(path.resolve(dir));
+
+        // Graceful: if no notebooks with claims found, explain instead of erroring
+        if (result.stats.notebooksWithClaims === 0) {
+            console.log(`\n═══ Science Agent: Aggregate ═══\n`);
+            console.log(`  Scanned ${result.stats.notebooksScanned} notebook(s) in ${path.resolve(dir)}`);
+            console.log(`  No "## Key Claims" sections found.\n`);
+            console.log(`  To use this feature, add a Key Claims block to your notebooks:`);
+            console.log(`    ## Key Claims`);
+            console.log(`    - **K1**: Finding description (p < .05, d = 0.8)`);
+            console.log(`    - **K2**: Another finding\n`);
+            console.log(`  See: https://github.com/andyed/science-agent/blob/main/docs/notebook-conventions.md\n`);
+            process.exit(0);
+        }
 
         if (flags.json) {
             console.log(JSON.stringify(result, null, 2));
@@ -258,12 +282,37 @@ async function main() {
 
     } else if (command === 'notebook-audit') {
         const dir = positional[0] || '.';
+
+        // Graceful degradation: check if the directory has any [NB##:K##] references
+        const targetDir = path.resolve(dir);
+        if (!fs.existsSync(targetDir)) {
+            console.log(`\n  ℹ Directory not found: ${targetDir}`);
+            console.log(`  This command audits [NB##:K##] claim references in prose files.`);
+            console.log(`  See: science-agent aggregate --help for setting up Key Claims.\n`);
+            process.exit(0);
+        }
+
         const { auditNotebookClaims, auditCrossRepo } = require('./src/notebook-audit');
 
-        const result = auditNotebookClaims(path.resolve(dir), {
+        const result = auditNotebookClaims(targetDir, {
             aggregatePath: flags.aggregate ? path.resolve(flags.aggregate) : null,
             notebookDir: flags.notebooks ? path.resolve(flags.notebooks) : null,
         });
+
+        // If no claim references found at all, explain what this command is for
+        if (result.stats.totalRefs === 0 && result.issues.length === 0) {
+            console.log(`\n═══ Science Agent: Notebook Claims Audit ═══\n`);
+            console.log(`  Directory: ${targetDir}`);
+            console.log(`  No [NB##:K##] claim references found in this directory.\n`);
+            console.log(`  This command verifies notebook-style claim references.`);
+            console.log(`  To get started with Key Claims:`);
+            console.log(`    1. Add a "## Key Claims" section to your notebooks`);
+            console.log(`    2. Reference claims in prose as [NB01:K1], [NB01:K2], etc.`);
+            console.log(`    3. Run: science-agent aggregate ./notebooks/ -o key-claims.md`);
+            console.log(`    4. Then: science-agent notebook-audit ./docs --aggregate=key-claims.md\n`);
+            console.log(`  See: https://github.com/andyed/science-agent/blob/main/docs/notebook-conventions.md\n`);
+            process.exit(0);
+        }
 
         if (flags.json) {
             console.log(JSON.stringify(result, null, 2));

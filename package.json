@@ -11,6 +11,21 @@
     "test": "node cli.js audit ./test-fixtures --bibtex=./test-fixtures/refs.bib"
   },
   "keywords": ["science", "citation", "academic", "confabulation", "ai", "verification", "bibtex", "crossref", "research"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/andyed/science-agent.git"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "cli.js",
+    "src/",
+    "agent.md",
+    "docs/",
+    "README.md",
+    "CHANGELOG.md"
+  ],
   "author": "Andy Edmonds <andyed@gmail.com>",
   "license": "MIT",
   "type": "commonjs",
