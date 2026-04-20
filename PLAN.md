@@ -239,6 +239,42 @@ Phase 3:
 - [ ] Auto-suggest DOIs for unverified citations
 - [ ] CI integration (fail build on unverified citations)
 
+## Phase 5: Upstream ports (K-Dense scientific-agent-skills)
+
+> [K-Dense AI's `scientific-agent-skills`](https://github.com/K-Dense-AI/scientific-agent-skills) ships an MIT-licensed family of research skills. Citation-management, critical-thinking, and literature-review overlap our territory enough to borrow from. These items are ports, not integrations — we want a self-contained Node CLI, not a Python dependency graph.
+
+### 5.1 PubMed E-utilities + MeSH search (`src/pubmed.js`)
+
+- Science-agent currently hits CrossRef + arXiv only. Biomedical coverage is thin.
+- K-Dense's [`search_pubmed.py`](https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/scientific-skills/citation-management/SKILL.md) uses E-utilities `esearch`/`efetch` with MeSH-term Boolean queries — no API key required for basic rate limits.
+- Port path: thin Node wrapper around `eutils.ncbi.nlm.nih.gov/entrez/eutils/` — no new deps, just `fetch`. Cache results under `~/.science-agent/cache/pubmed/`.
+- New CLI verb: `science-agent pubmed "query"` → returns BibTeX-ready entries with PMID + DOI when available.
+- Integration with existing `verify`: when a citation has a PMID (not just DOI), resolve via E-utilities before falling back to CrossRef.
+
+### 5.2 BibTeX normaliser (`src/bibtex-format.js`)
+
+- We parse BibTeX. We don't rewrite it.
+- K-Dense's `format_bibtex.py` handles: deduplication, sorting, required-field validation, syntax correction.
+- Port path: extend existing `src/bibtex.js`. Add `science-agent format refs.bib` verb that emits a normalised `.bib` (dry-run by default, `--write` to overwrite).
+- Must preserve `{CamelCase}` title-case protection.
+
+### 5.3 Cross-reference `scientific-critical-thinking` in `science-audit` agent
+
+- [K-Dense's `scientific-critical-thinking`](https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/scientific-skills/scientific-critical-thinking/SKILL.md) encodes GRADE, Cochrane Risk of Bias, and a five-category bias taxonomy.
+- Our existing `.claude/agents/science-audit.md` plays the same role at a different granularity (framing errors, metric confusion, unsupported claims in research artifacts).
+- Not a port — a cross-reference. Update `agent.md` so the audit output tags bias categories using K-Dense's taxonomy labels (Cognitive / Selection / Measurement / Analysis / Confounding). Gives our reports a shared vocabulary with anyone already using K-Dense.
+
+### 5.4 Literature-review prompt template
+
+- [K-Dense's `literature-review`](https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/scientific-skills/literature-review/SKILL.md) runs a seven-phase workflow (Plan → Search → Screen → Extract → Synthesise → Verify citations → Generate).
+- Not code — prompt structure. Worth borrowing as a template when someone invokes science-agent for a lit sweep. File under `docs/lit-review-workflow.md`.
+
+### 5.5 Non-goals
+
+- **Don't wrap `parallel-cli`.** K-Dense's literature-review requires it for search. We stay portable.
+- **Don't add LaTeX PDF generation.** K-Dense outputs PDFs via XeLaTeX + BibTeX. Our lane is verification, not document production. Callers can pipe our reports into their own build.
+- **Don't absorb `scientific-schematics`.** That's muriel's job. See muriel's TODO for the muriel-side integration.
+
 ## Origin Story
 
 Built after discovering AI-confabulated citations in the Scrutinizer project (a peripheral vision simulator). A collaborator (Nick Blauch, Harvard/NVIDIA) checked the arxiv reference to his own paper during a meeting and found the title was wrong. Audit revealed 12% of BibTeX entries and 1 complete fabrication across 70+ citations. The confabulations follow a "95% correct, 5% fabricated" pattern that passes casual review — the most dangerous kind of error for scientific writing.

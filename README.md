@@ -190,6 +190,7 @@ See [FINDINGS.md](FINDINGS.md) for the complete audit with methodology, data, pa
 | [CiteME](https://arxiv.org/abs/2407.12861) | Benchmark: can LLMs identify source papers from excerpts? | Benchmark, not a tool. Different task (retrieval vs. verification) |
 | [Context Rot](https://github.com/chroma-core/context-rot) | Measures general LLM degradation with context length | Methodology foundation for understanding why hallucination worsens under load |
 | [Claude Scholar](https://github.com/Galaxy-Dawn/claude-scholar) | Full research lifecycle config for Claude Code | Workflow orchestrator with prompt-based citation checking. Science-agent could serve as its verification backend via MCP |
+| [K-Dense scientific-agent-skills: citation-management](https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/scientific-skills/citation-management/SKILL.md) | Discovery + formatting — Google Scholar / PubMed MeSH / CrossRef / arXiv / DataCite search, BibTeX deduplication, sorting, validation | Different emphasis, complementary surface. K-Dense covers *finding and formatting* references. Science-agent covers *verifying* them and catching cross-file drift in claims that cite them. MIT-licensed sibling worth running alongside |
 
 ![Go-go gadget peer review](assets/gogogadget-peer-review.png)
 
