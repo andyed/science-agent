@@ -98,16 +98,35 @@ The pattern is the same everywhere: point at a directory of prose and a BibTeX f
 
 For deeper integration, see [`agent.md`](agent.md) (Claude Code agent) or [`docs/github-actions.md`](docs/github-actions.md) (CI/CD).
 
-### Claude Code Agent (optional)
+### Claude Code Agents (optional)
 
-Drop `agent.md` into your project's `.claude/agents/` directory for automatic activation:
+Two review agents ship with this repo, each gating a different concern before a research artifact reaches `git push`:
+
+| Agent | Concern | File |
+|---|---|---|
+| `science-agent` | Citation structure — title, author, DOI valid; confabulation detection | [`agent.md`](agent.md) |
+| `rigor-audit` | Rigor framing — nulls as detection limits, p-values paired with effect+CI, metrics defined before interpretation, claims supported | [`agents/rigor-audit.md`](agents/rigor-audit.md) |
+
+A planned third agent — `claim-audit` — will cover semantic claim correctness (does the cited paper actually say this?). It slots into `agents/` when [Phase 4 of `PLAN.md`](PLAN.md#phase-4-claim-auditor-content-accuracy) ships.
+
+**Install (no clone, copy pattern):**
 
 ```bash
 mkdir -p .claude/agents
 curl -o .claude/agents/science-agent.md https://raw.githubusercontent.com/andyed/science-agent/main/agent.md
+curl -o .claude/agents/rigor-audit.md   https://raw.githubusercontent.com/andyed/science-agent/main/agents/rigor-audit.md
 ```
 
-The agent activates when it detects citation patterns — uses WebFetch to verify DOIs against CrossRef, no install needed.
+**Install (clone, symlink pattern — recommended):**
+
+If you have the repo checked out, symlink the agents into your user-level Claude config so edits to the canonical files take effect immediately:
+
+```bash
+ln -s "$(pwd)/agent.md"                  ~/.claude/agents/science-agent.md
+ln -s "$(pwd)/agents/rigor-audit.md"     ~/.claude/agents/rigor-audit.md
+```
+
+The agents activate when invoked via `subagent_type` — `science-agent` uses WebFetch to verify DOIs against CrossRef; `rigor-audit` reviews diffs against framing rules.
 
 ## CLI
 
