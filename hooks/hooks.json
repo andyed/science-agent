@@ -1,0 +1,14 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "mkdir -p \"${CLAUDE_PLUGIN_DATA}\" && if [ ! -d \"${CLAUDE_PLUGIN_DATA}/node_modules\" ] || ! diff -q \"${CLAUDE_PLUGIN_ROOT}/package.json\" \"${CLAUDE_PLUGIN_DATA}/package.json\" >/dev/null 2>&1; then cp \"${CLAUDE_PLUGIN_ROOT}/package.json\" \"${CLAUDE_PLUGIN_DATA}/package.json\" && (cd \"${CLAUDE_PLUGIN_DATA}\" && npm install --omit=dev --no-audit --no-fund --silent) || (rm -f \"${CLAUDE_PLUGIN_DATA}/package.json\"; echo 'science-agent: npm install failed'); fi"
+          }
+        ]
+      }
+    ]
+  }
+}

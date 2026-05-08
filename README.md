@@ -98,35 +98,35 @@ The pattern is the same everywhere: point at a directory of prose and a BibTeX f
 
 For deeper integration, see [`agent.md`](agent.md) (Claude Code agent) or [`docs/github-actions.md`](docs/github-actions.md) (CI/CD).
 
-### Claude Code Agents (optional)
+### Claude Code plugin (recommended)
 
-Two review agents ship with this repo, each gating a different concern before a research artifact reaches `git push`:
+Install the whole toolkit — agents, slash commands, CLI — in one step:
 
-| Agent | Concern | File |
-|---|---|---|
-| `science-agent` | Citation structure — title, author, DOI valid; confabulation detection | [`agent.md`](agent.md) |
-| `rigor-audit` | Rigor framing — nulls as detection limits, p-values paired with effect+CI, metrics defined before interpretation, claims supported | [`agents/rigor-audit.md`](agents/rigor-audit.md) |
+```
+/plugin install andyed/science-agent
+```
 
-A planned third agent — `claim-audit` — will cover semantic claim correctness (does the cited paper actually say this?). It slots into `agents/` when [Phase 4 of `PLAN.md`](PLAN.md#phase-4-claim-auditor-content-accuracy) ships.
+This pulls the repo, installs npm dependencies into the plugin data dir, and registers:
 
-**Install (no clone, copy pattern):**
+- **Slash commands**: `/science-agent:audit`, `/science-agent:figure-audit`, `/science-agent:notebook-audit`, `/science-agent:verify`, `/science-agent:search`, `/science-agent:aggregate`, `/science-agent:arxiv`
+- **Sub-agents** (auto-invoked when relevant): `figure-audit`, `rigor-audit`
+
+`prose-audit` is **not** in the plugin yet — its rule table currently lives in [`muriel`](https://github.com/andyed/muriel) (Python) and would force a Python install on every plugin user. Available locally as `node cli.js prose-audit <file>` if you have `muriel` cloned. Native Node port tracked.
+
+A planned fourth agent — `claim-audit` — will cover semantic claim correctness (does the cited paper actually say this?). It slots into `agents/` when [Phase 4 of `PLAN.md`](PLAN.md#phase-4-claim-auditor-content-accuracy) ships.
+
+### Claude Code agents (manual install — pre-plugin pattern)
+
+If you don't want the full plugin, you can drop individual agent files into `.claude/agents/`:
 
 ```bash
 mkdir -p .claude/agents
 curl -o .claude/agents/science-agent.md https://raw.githubusercontent.com/andyed/science-agent/main/agent.md
 curl -o .claude/agents/rigor-audit.md   https://raw.githubusercontent.com/andyed/science-agent/main/agents/rigor-audit.md
+curl -o .claude/agents/figure-audit.md  https://raw.githubusercontent.com/andyed/science-agent/main/agents/figure-audit.md
 ```
 
-**Install (clone, symlink pattern — recommended):**
-
-If you have the repo checked out, symlink the agents into your user-level Claude config so edits to the canonical files take effect immediately:
-
-```bash
-ln -s "$(pwd)/agent.md"                  ~/.claude/agents/science-agent.md
-ln -s "$(pwd)/agents/rigor-audit.md"     ~/.claude/agents/rigor-audit.md
-```
-
-The agents activate when invoked via `subagent_type` — `science-agent` uses WebFetch to verify DOIs against CrossRef; `rigor-audit` reviews diffs against framing rules.
+The CLI must be available on `$PATH` (or via `node cli.js`) for `figure-audit` to work — the plugin path handles this automatically.
 
 ## CLI
 

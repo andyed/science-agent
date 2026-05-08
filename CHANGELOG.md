@@ -2,7 +2,9 @@
 
 ## Unreleased
 
+- **Claude Code plugin** — `/plugin install andyed/science-agent` registers sub-agents and slash commands (`/science-agent:audit`, `:figure-audit`, `:notebook-audit`, `:verify`, `:search`, `:aggregate`, `:arxiv`). SessionStart hook installs npm deps into `${CLAUDE_PLUGIN_DATA}` so the CLI works out of the box. Manifest at `.claude-plugin/plugin.json`. Note: `prose-audit` is excluded from the plugin until its rule table is ported from `muriel` (Python) to native Node — shipping a plugin that requires a Python sidecar would be a poor install experience.
 - **`prose-audit`** — Lint paper drafts for AI-tell prose patterns. Bridges to `muriel.aiism` (Python; canonical rule table) via subprocess. Surfaces em-dash addiction, "load-bearing" / "structurally" / "materially" intensifiers, definitional clefts, "What X is Y" / "not X but Y" tics, "already-Y" compounds, mid-paragraph bold, and overlong sentences. Pencil-aware (skips locked sentences). Sibling agent at `agents/prose-audit.md`.
+- **`figure-audit`** — Verify figure caption numerics against `*_summary.json` sidecars. For each `### figure.png` section in an `INDEX.md`, walks the linked stats dump, extracts numerics from the caption prose, and matches them. Catches stale prose where a value drifted between figure regeneration and caption update. Pre-strips dates, HTML attributes, inline code, markdown links, URLs, and citation tokens before extraction; handles space-separated thousands ("1 854" = 1854). Three-tier reporting: matched / unverified / mismatch (the primary stale-prose signal). Sibling agent at `agents/figure-audit.md`.
 
 ## 0.1.0 (2026-04-14)
 

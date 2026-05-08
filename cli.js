@@ -40,6 +40,7 @@ Usage:
   science-agent prose-audit <file-or-dir>       Lint paper drafts for AI-tell prose
     --severity=warn                               Exit nonzero at this severity (info|warn|error)
     --no-pencil                                   Don't skip pencil-locked sentences
+  science-agent figure-audit <INDEX.md>         Verify figure caption numerics against summary.json sidecars
 
 Options:
   --json           Output as JSON
@@ -378,6 +379,32 @@ async function main() {
 
         const errors = result.issues.filter(i => i.severity === 'error').length;
         if (errors > 0) process.exit(1);
+
+    } else if (command === 'figure-audit') {
+        const target = positional[0];
+        if (!target) {
+            console.error('usage: science-agent figure-audit <INDEX.md> [--json]');
+            process.exit(2);
+        }
+        const targetPath = path.resolve(target);
+        if (!fs.existsSync(targetPath)) {
+            console.error(`figure-audit: not found: ${targetPath}`);
+            process.exit(2);
+        }
+        const { auditIndex, formatReport } = require('./src/figure-audit');
+        const audit = auditIndex(targetPath);
+
+        if (flags.json) {
+            console.log(JSON.stringify(audit, null, 2));
+        } else {
+            console.log(`\n═══ Science Agent: Figure Caption Audit ═══\n`);
+            console.log(formatReport(audit));
+            console.log('');
+        }
+
+        const totMis = audit.figures.reduce((n, f) => n + (f.mismatched ? f.mismatched.length : 0), 0);
+        const totErr = audit.figures.reduce((n, f) => n + (f.error ? 1 : 0), 0);
+        if (totMis > 0 || totErr > 0) process.exit(1);
 
     } else if (command === 'prose-audit') {
         const target = positional[0];
