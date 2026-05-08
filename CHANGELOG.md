@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- **`prose-audit`** — Lint paper drafts for AI-tell prose patterns. Bridges to `muriel.aiism` (Python; canonical rule table) via subprocess. Surfaces em-dash addiction, "load-bearing" / "structurally" / "materially" intensifiers, definitional clefts, "What X is Y" / "not X but Y" tics, "already-Y" compounds, mid-paragraph bold, and overlong sentences. Pencil-aware (skips locked sentences). Sibling agent at `agents/prose-audit.md`.
+
 ## 0.1.0 (2026-04-14)
 
 First public release. Citation verification for AI-assisted research.

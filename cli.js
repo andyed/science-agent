@@ -37,6 +37,9 @@ Usage:
     --cross-repo=<dir>                            Scan downstream repo for stale values
   science-agent aggregate <notebooks-dir>       Generate key-claims aggregate
     -o <path>                                     Output file (default: stdout)
+  science-agent prose-audit <file-or-dir>       Lint paper drafts for AI-tell prose
+    --severity=warn                               Exit nonzero at this severity (info|warn|error)
+    --no-pencil                                   Don't skip pencil-locked sentences
 
 Options:
   --json           Output as JSON
@@ -375,6 +378,73 @@ async function main() {
 
         const errors = result.issues.filter(i => i.severity === 'error').length;
         if (errors > 0) process.exit(1);
+
+    } else if (command === 'prose-audit') {
+        const target = positional[0];
+        if (!target) {
+            console.error('usage: science-agent prose-audit <file-or-dir> [--severity=warn] [--respect-pencil] [--summary] [--json]');
+            process.exit(2);
+        }
+        const { auditProse, auditDirectory, formatReport, formatSummary } = require('./src/prose-audit');
+        const targetPath = path.resolve(target);
+        if (!fs.existsSync(targetPath)) {
+            console.error(`prose-audit: not found: ${targetPath}`);
+            process.exit(2);
+        }
+
+        const respectPencil = flags['respect-pencil'] !== 'false' && flags['no-pencil'] !== true;
+        const severity = flags.severity || 'warn';
+        const summary = flags.summary === true;
+        const stat = fs.statSync(targetPath);
+
+        let progressShown = 0;
+        const onProgress = !flags.json && stat.isDirectory()
+            ? (i, total, file) => {
+                if (i === 1 || i === total || i - progressShown >= 25) {
+                    process.stderr.write(`\r  scanning ${i}/${total}…  `);
+                    progressShown = i;
+                }
+                if (i === total) process.stderr.write('\n');
+            }
+            : null;
+
+        const results = stat.isDirectory()
+            ? auditDirectory(targetPath, { respectPencil, onProgress })
+            : [auditProse(targetPath, { respectPencil })];
+
+        if (flags.json) {
+            console.log(JSON.stringify(results.length === 1 ? results[0] : results, null, 2));
+        } else if (summary) {
+            console.log(`\n═══ Science Agent: Prose Audit (summary) ═══\n`);
+            console.log(`  Source rules: muriel.aiism (rule table in muriel/aiism.py)\n`);
+            console.log(formatSummary(results));
+        } else {
+            console.log(`\n═══ Science Agent: Prose Audit ═══\n`);
+            console.log(`  Source rules: muriel.aiism (rule table in muriel/aiism.py)\n`);
+            for (const r of results) {
+                console.log(formatReport(r));
+            }
+        }
+
+        if (!flags.json) {
+            const totals = results.reduce((acc, r) => {
+                acc.error += r.summary.error || 0;
+                acc.warn += r.summary.warn || 0;
+                acc.info += r.summary.info || 0;
+                acc.total += r.summary.total || 0;
+                return acc;
+            }, { error: 0, warn: 0, info: 0, total: 0 });
+            console.log(`── Totals across ${results.length} file(s) ──`);
+            console.log(`  ${totals.error} error · ${totals.warn} warn · ${totals.info} info  (${totals.total} total)\n`);
+        }
+
+        const order = { info: 0, warn: 1, error: 2 };
+        const threshold = order[severity] ?? 1;
+        const worst = results.reduce((m, r) => {
+            for (const f of r.findings) m = Math.max(m, order[f.severity] ?? 0);
+            return m;
+        }, -1);
+        if (worst >= threshold) process.exit(1);
 
     } else {
         console.error(`Unknown command: ${command}`);
