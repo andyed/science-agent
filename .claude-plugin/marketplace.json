@@ -1,0 +1,20 @@
+{
+  "name": "science-agent",
+  "description": "Citation, prose, figure, and rigor auditing for AI-assisted research drafts",
+  "owner": {
+    "name": "Andy Edmonds"
+  },
+  "plugins": [
+    {
+      "name": "science-agent",
+      "description": "Validates citations against CrossRef/BibTeX, audits figures, prose, notebooks, and rigor. Slash commands /audit /verify /search /figure-audit /notebook-audit /hypothesis-card /arxiv /aggregate plus rigor-audit and figure-audit sub-agents.",
+      "version": "0.2.0",
+      "author": {
+        "name": "Andy Edmonds"
+      },
+      "source": "./",
+      "category": "productivity",
+      "keywords": ["science", "citation", "academic", "ai-tells", "research", "bibtex", "crossref"]
+    }
+  ]
+}

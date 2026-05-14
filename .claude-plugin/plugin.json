@@ -2,7 +2,10 @@
   "name": "science-agent",
   "version": "0.2.0",
   "description": "Citation, prose, figure, and rigor auditing for AI-assisted research drafts.",
-  "author": "Andy Edmonds <andyed@gmail.com>",
+  "author": {
+    "name": "Andy Edmonds",
+    "email": "andyed@gmail.com"
+  },
   "homepage": "https://github.com/andyed/science-agent",
   "repository": "https://github.com/andyed/science-agent",
   "license": "MIT",
