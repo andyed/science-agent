@@ -445,7 +445,7 @@ async function main() {
             ? auditDirectory(targetPath, { respectPencil, native, muriel, onProgress })
             : [auditProse(targetPath, { respectPencil, native, muriel })];
 
-        const sourcesNote = `  Sources: native JS (ARS v3.9.4 rules) + muriel.aiism (when available)\n`;
+        const sourcesNote = `  Sources: native JS (rules from src/aiism-rules.json) + muriel.aiism (when available)\n`;
 
         if (flags.json) {
             console.log(JSON.stringify(results.length === 1 ? results[0] : results, null, 2));

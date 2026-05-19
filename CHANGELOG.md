@@ -1,4 +1,13 @@
+
+
 # Changelog
+
+## 0.3.0 (2026-05-19)
+
+- **Removed all CC BY-NC 4.0 content from `aiism-rules.json`** — The ARS-derived rule lists shipped briefly in 0.2.0 (`flagged-term` 25-word list, `throat-clearing` 12-opener list, `synonym-cycling` 6-group list, plus the `colon-list-sequence` and `rule-of-three` engine entries) carried a non-commercial restriction that would have constrained downstream use of science-agent and any consumer (muriel, plugins). They are gone in JSON v2.
+- **Retained as first-party thresholds**: `em-dash-total` (≤3/paper), `semicolon-density` (≤2/1000w), `binary-contrast` (≤2/paper). These are simple numeric/structural rules supported by direct observation in this project's own draft cleanups (paper.tex had 13 em-dashes, 20 semicolons, and a "Two flavors, two stories" binary-contrast tic). The numbers are the maintainer's threshold call; the detector code is MIT (mine).
+- **JS engine code unchanged.** `auditFlaggedTerms`, `auditThroatClearing`, `auditSynonymCycling`, etc. still exist in `prose-audit.js` (MIT). If the JSON later gains first-party rule entries of those kinds (e.g., a `flagged-term-group` rule populated from observed cleanups in this repo's own drafts), the engine fires them. Removing the data didn't remove the machinery.
+- **License file updated**: [`src/aiism-rules.LICENSE.md`](src/aiism-rules.LICENSE.md) now describes only the two surviving license regimes — first-party (MIT) and muriel-derived (CC-BY-SA-4.0 + project-specific).
 
 ## 0.2.0 (2026-05-18)
 

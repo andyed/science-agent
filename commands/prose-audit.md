@@ -12,17 +12,17 @@ Then summarize. Lead with the highest-severity rule clusters (where the same rul
 
 ## Rule sources
 
-- **Native JS rules** (always on; ported from academic-research-skills v3.9.4):
-  - `flagged-term` — 25 overused AI-text words with suggested alternatives
-  - `em-dash-total` — paper-wide ≤3 limit (Unicode `—` and LaTeX `---`)
-  - `semicolon-density` — paper-wide ≤2 per 1000 words
-  - `colon-list-sequence` — 2+ consecutive colon-intro→list paragraphs
-  - `throat-clearing` — 12 sentence-starter clichés
-  - `rule-of-three` — every list in a section has exactly 3 items
-  - `synonym-cycling` — 3+ near-synonyms in one paragraph
-  - `binary-contrast` — "Not X. Y." pattern > 2 per paper
+Rule data lives in [`src/aiism-rules.json`](../src/aiism-rules.json); detection engines live in [`src/prose-audit.js`](../src/prose-audit.js). Per-rule attribution is recorded in each entry's `source` field; see [`src/aiism-rules.LICENSE.md`](../src/aiism-rules.LICENSE.md).
 
-- **muriel.aiism** (Python; auto-detected): em-dash addiction per-line, intensifier repetition, definitional clefts, "What X is Y" / "not X but Y" tics, overlong sentences, hard LLM-tool artifacts. Skipped for `.tex` files and when `muriel` is not installed.
+**Active rule categories (from JSON):**
+
+- First-party threshold rules — `em-dash-total` (≤3/paper), `semicolon-density` (≤2/1000 words), `binary-contrast` (≤2/paper).
+- `muriel`-derived rules — hard LLM-tool artifacts (oaicite tokens, sandbox paths, knowledge-cutoff disclaimers, etc.), project-specific phrase tics, intensifier repetition, padded-vocabulary clusters, hedge clusters, definitional-cleft proximity. Some of these carry CC-BY-SA-4.0 attribution from Wikipedia/Vale provenance; per-rule `source` field documents this.
+
+**Engines available but currently dataless** (the JS detector exists; no rule entries fire them until populated):
+`flagged-term-group`, `sentence-opener-group`, `synonym-group`, `colon-list-sequence` engine, `rule-of-three` engine.
+
+**Optional muriel.aiism subprocess** (Python; auto-detected for `.md`/`.ipynb` only): adds engine-specific Python detectors not yet ported to JS — long-sentence detection, bold-density, em-dash-per-line. Skipped for `.tex` files and when `muriel` is not installed.
 
 ## Supported inputs
 
@@ -33,6 +33,6 @@ Then summarize. Lead with the highest-severity rule clusters (where the same rul
 - `--severity={info,warn,error}` — exit nonzero if any finding ≥ this severity (default `warn`)
 - `--no-pencil` — don't skip pencil-locked sentences
 - `--no-muriel` — skip the Python muriel.aiism pass (native rules only)
-- `--no-native` — skip the native ARS rule set (muriel only)
+- `--no-native` — skip the native JSON-loaded rules (muriel only)
 - `--summary` — one-line-per-file table instead of full findings
 - `--json` — machine-readable output

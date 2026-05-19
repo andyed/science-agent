@@ -1,54 +1,20 @@
 {
-  "$schema": "./aiism-rules.schema.md",
-  "version": 1,
-  "description": "Canonical AI-tell rule table for prose-audit. Designed to be loaded by multiple engines (currently science-agent/prose-audit.js; planned: muriel/aiism.py via follow-up refactor). Engine-specific rules (those that need custom traversal logic) are declared here for discoverability but their detectors live in code.",
+  "$schema": "./aiism-rules.LICENSE.md",
+  "version": 2,
+  "description": "Canonical AI-tell rule table for prose-audit. Loaded by science-agent/prose-audit.js. Engine-specific rules (custom traversal) are declared here for discoverability; their detectors live in code.",
   "owners": [
-    "science-agent (canonical) — github.com/andyed/science-agent",
-    "muriel (planned consumer) — local sibling repo"
+    "science-agent (canonical) — github.com/andyed/science-agent"
   ],
+  "notes": "v2 (2026-05-18): removed all CC BY-NC 4.0-derived content (ARS v3.9.4 flagged-term / throat-clearing / synonym-cycling / colon-list-sequence / rule-of-three entries) so the file is distributable under science-agent's MIT license. Threshold-based rules (em-dash, semicolon, binary-contrast) retained with origin re-attributed to first-party observation. The remaining rules from muriel (CC-BY-SA-4.0 and project-specific) keep their original source attribution per entry.",
   "rules": [
-    {
-      "id": "flagged-term",
-      "kind": "flagged-term-group",
-      "severity": "warn",
-      "message_template": "\"{term}\" — overused AI-text word. Consider: {alternatives}",
-      "source": "academic-research-skills v3.9.4 (CC BY-NC 4.0); list is functional/factual",
-      "terms": [
-        { "lemma": "delv(?:e|es|ed|ing)",     "alternatives": "examine, investigate, analyze, explore" },
-        { "lemma": "tapestr(?:y|ies)",         "alternatives": "network, interplay, system, mix" },
-        { "lemma": "landscapes?",              "alternatives": "field, domain, context" },
-        { "lemma": "pivotal",                  "alternatives": "important, central, key" },
-        { "lemma": "crucial(?:ly)?",           "alternatives": "essential, necessary, critical" },
-        { "lemma": "foster(?:s|ed|ing)?",      "alternatives": "promote, develop, encourage" },
-        { "lemma": "showcas(?:e|es|ed|ing)",   "alternatives": "demonstrate, illustrate, present" },
-        { "lemma": "testament",                "alternatives": "evidence, indicator, demonstration" },
-        { "lemma": "navigat(?:e|es|ed|ing)",   "alternatives": "manage, address, handle" },
-        { "lemma": "leverag(?:e|es|ed|ing)",   "alternatives": "use, employ, apply" },
-        { "lemma": "realms?",                  "alternatives": "domain, field, area" },
-        { "lemma": "embark(?:s|ed|ing)?",      "alternatives": "begin, initiate, undertake" },
-        { "lemma": "underscor(?:e|es|ed|ing)", "alternatives": "emphasize, highlight, stress" },
-        { "lemma": "multifaceted",             "alternatives": "complex, varied, multilayered" },
-        { "lemma": "nuanced",                  "alternatives": "subtle, detailed, fine-grained" },
-        { "lemma": "comprehensive(?:ly)?",     "alternatives": "thorough, extensive, detailed" },
-        { "lemma": "robust(?:ly)?",            "alternatives": "reliable, strong, rigorous" },
-        { "lemma": "intricate(?:ly)?",         "alternatives": "complex, detailed, elaborate" },
-        { "lemma": "cornerstones?",            "alternatives": "foundation, basis, core element" },
-        { "lemma": "paradigms?",               "alternatives": "framework, model, approach" },
-        { "lemma": "synerg(?:y|ies)",          "alternatives": "interaction, cooperation, combined effect" },
-        { "lemma": "holistic(?:ally)?",        "alternatives": "integrated, whole-system" },
-        { "lemma": "streamlin(?:e|es|ed|ing)", "alternatives": "simplify, optimize" },
-        { "lemma": "cutting[- ]edge",          "alternatives": "recent, advanced, state-of-the-art" },
-        { "lemma": "groundbreaking",           "alternatives": "novel, innovative, pioneering" }
-      ]
-    },
     {
       "id": "em-dash-total",
       "kind": "doc-count-limit",
       "severity": "warn",
       "pattern": "—",
       "limit": 3,
-      "message_template": "Em-dash #{n} of {total}. Limit is ≤{limit} per paper (recommend 0–1). Replace with commas, parentheses, or separate sentences.",
-      "source": "academic-research-skills v3.9.4 (CC BY-NC 4.0)"
+      "message_template": "Em-dash #{n} of {total}. Limit is ≤{limit} per paper. Replace with commas, parentheses, or separate sentences.",
+      "source": "first-party observation (allserp-paper/paper.tex draft had 13 em-dashes; cleanup target = ≤3)"
     },
     {
       "id": "semicolon-density",
@@ -57,68 +23,473 @@
       "pattern": ";",
       "per_1000_words": 2,
       "message_template": "Semicolon #{n} of {total} ({rate}/1000 words; limit {limit}/1000). Use a period or restructure into parallel clauses.",
-      "source": "academic-research-skills v3.9.4 (CC BY-NC 4.0)"
-    },
-    {
-      "id": "throat-clearing",
-      "kind": "sentence-opener-group",
-      "severity": "warn",
-      "message_template": "\"{opener}…\" — {note}",
-      "source": "academic-research-skills v3.9.4 (CC BY-NC 4.0)",
-      "openers": [
-        { "pattern": "In the realm of\\b",                      "note": "Delete. Start with the actual subject." },
-        { "pattern": "It'?s important to note that\\b",         "note": "Delete. If it's important, content speaks for itself." },
-        { "pattern": "It is worth (?:mentioning|noting|pointing out) that\\b", "note": "Delete. State the thing." },
-        { "pattern": "In today'?s (?:rapidly evolving|fast-paced)\\b", "note": "Delete. Timestamped cliché." },
-        { "pattern": "This serves as a testament to\\b",        "note": "Replace with a direct claim (\"This demonstrates...\")." },
-        { "pattern": "It goes without saying that\\b",          "note": "If it goes without saying, don't say it." },
-        { "pattern": "In order to\\b",                          "note": "Replace with \"To\"." },
-        { "pattern": "It should be noted that\\b",              "note": "Delete. Just note it." },
-        { "pattern": "As a matter of fact\\b",                  "note": "Delete. State the fact." },
-        { "pattern": "When it comes to\\b",                     "note": "Replace with the subject directly." },
-        { "pattern": "At the end of the day\\b",                "note": "Delete. Colloquial and vague." },
-        { "pattern": "With that being said\\b",                 "note": "Delete or use \"However\" if a contrast is intended." }
-      ]
-    },
-    {
-      "id": "synonym-cycling",
-      "kind": "synonym-group",
-      "severity": "warn",
-      "scope": "paragraph",
-      "threshold": 3,
-      "message_template": "Paragraph cycles through {count} {group}-synonyms: {members}. Pick one term and repeat it — consistent terminology is clarity, not weakness.",
-      "source": "academic-research-skills v3.9.4 (CC BY-NC 4.0)",
-      "groups": [
-        { "name": "importance",         "members": ["important", "crucial", "essential", "vital", "critical", "paramount", "pivotal", "significant"] },
-        { "name": "show",               "members": ["shows", "demonstrates", "illustrates", "reveals", "highlights", "underscores", "emphasizes", "showcases"] },
-        { "name": "strong",             "members": ["robust", "strong", "powerful", "sturdy", "resilient", "rigorous", "solid"] },
-        { "name": "study-participants", "members": ["students", "learners", "participants", "subjects", "respondents", "individuals"] },
-        { "name": "complex",            "members": ["complex", "intricate", "multifaceted", "nuanced", "elaborate", "sophisticated", "multilayered"] },
-        { "name": "use",                "members": ["use", "leverage", "utilize", "employ", "apply", "harness"] }
-      ]
-    },
-    {
-      "id": "colon-list-sequence",
-      "kind": "engine",
-      "severity": "warn",
-      "source": "academic-research-skills v3.9.4 (CC BY-NC 4.0)",
-      "description": "Fires when 2+ consecutive (colon-intro → list) paragraphs occur. Engine-specific because it requires paragraph segmentation and list-marker detection."
-    },
-    {
-      "id": "rule-of-three",
-      "kind": "engine",
-      "severity": "info",
-      "source": "academic-research-skills v3.9.4 (CC BY-NC 4.0)",
-      "config": { "min_lists_per_section": 2, "exact_items": 3 },
-      "description": "Fires when every list in a section has exactly N items (default 3) and the section has at least M lists (default 2)."
+      "source": "first-party observation (allserp-paper/paper.tex draft had 20 semicolons; cleanup target = ≤2/1000w)"
     },
     {
       "id": "binary-contrast",
       "kind": "engine",
       "severity": "warn",
-      "source": "academic-research-skills v3.9.4 (CC BY-NC 4.0)",
-      "config": { "limit_per_paper": 2 },
-      "description": "Fires when 'Not X. Y.' / 'Not just X — Y' patterns exceed the per-paper limit."
+      "config": {
+        "limit_per_paper": 2
+      },
+      "description": "Fires when 'Not X. Y.' / 'Not just X — Y' patterns exceed the per-paper limit. Detector implementation lives in prose-audit.js.",
+      "source": "first-party observation (allserp-paper/paper.tex had 'Two flavors, two stories' flagged as binary-contrast tic)"
+    },
+    {
+      "id": "artifact-oaicite",
+      "kind": "hard-artifact",
+      "severity": "error",
+      "pattern": "\\boaicite\\b|\\boai_citation\\b|:contentReference\\[",
+      "message": "Leaked OpenAI tool-citation token. Strip before any external pass.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "artifact-turn-token",
+      "kind": "hard-artifact",
+      "severity": "error",
+      "pattern": "\\bturn\\d+(?:search|fetch|view|news)\\d+\\b",
+      "message": "Leaked LLM tool token (turn-N). Always real; strip immediately.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "artifact-sandbox-path",
+      "kind": "hard-artifact",
+      "severity": "error",
+      "pattern": "\\bsandbox:/mnt/data/\\S+",
+      "message": "Leaked OpenAI sandbox path. Always real.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "artifact-chatgpt-url",
+      "kind": "hard-artifact",
+      "severity": "error",
+      "pattern": "\\b(?:chat\\.openai\\.com|chatgpt\\.com)/[^\\s)]+",
+      "message": "Live ChatGPT URL embedded in prose. Always a paste artifact.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "artifact-utm-chatgpt",
+      "kind": "hard-artifact",
+      "severity": "error",
+      "pattern": "utm_source=chatgpt\\.com",
+      "message": "Citation copied from ChatGPT with tracking parameter intact.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "artifact-knowledge-cutoff",
+      "kind": "hard-artifact",
+      "severity": "error",
+      "pattern": "\\bas\\s+of\\s+my\\s+(?:last\\s+update|knowledge\\s+cutoff|training)\\b",
+      "message": "Knowledge-cutoff disclaimer is LLM throat-clearing; cut.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "artifact-realtime-disclaimer",
+      "kind": "hard-artifact",
+      "severity": "error",
+      "pattern": "\\bI\\s+don'?t\\s+have\\s+access\\s+to\\s+real[-\\s]?time\\b",
+      "message": "LLM real-time-data disclaimer; cut.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "artifact-refusal-preamble",
+      "kind": "hard-artifact",
+      "severity": "error",
+      "pattern": "^\\s*(?:Certainly!|Sure,\\s+I'?d\\s+be\\s+happy|I\\s+cannot\\s+help\\s+with)",
+      "message": "Refusal/preamble residue from an LLM session. Strip.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "phrase-earn-their-keep",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\bearn(?:s|ed|ing)?\\s+(?:their|its)\\s+keep\\b",
+      "message": "Folksy where the rest is technical. Replace with something specific.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "phrase-locus-of",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\bthe\\s+locus\\s+of\\b",
+      "message": "Definitional cleft tic. Use 'where X happens' or just name X.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "phrase-unit-at-which",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\bthe\\s+unit\\s+at\\s+which\\b",
+      "message": "Definitional cleft tic. Most uses can become 'where X is recorded' or 'X-level'.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "phrase-substrate-licenses",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\bsubstrate\\s+that\\s+licenses\\b",
+      "message": "Performative depth. Say 'the partition is grounded in' or just state the grounding.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "phrase-doing-its-share",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\b(?:cursor|gaze|motor\\s+system)\\s+is\\s+doing\\s+its\\s+share\\b",
+      "message": "Anthropomorphism reviewers will quote back at you. Drop or rephrase mechanically.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "phrase-observational-register",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\bin\\s+observational\\s+register\\b",
+      "message": "Self-conscious framing. Trust the metaphor or unpack it plainly.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "phrase-names-the-same-observation",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\bnames\\s+the\\s+same\\s+observation\\b",
+      "message": "Title-explainer tic. Cut or rewrite as plain English.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "phrase-the-hope-is-that",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\bthe\\s+hope\\s+is\\s+that\\b",
+      "message": "Authorial-voice hedging that weakens the close. State what the work does.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "phrase-looking-into-the-corners",
+      "kind": "single-phrase",
+      "severity": "info",
+      "pattern": "\\blooking\\s+into\\s+the\\s+corners\\b",
+      "message": "Italicized motif. Allowed once (e.g., §5 header). Flag every additional occurrence.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "phrase-leaky-cursor-aside",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\bleaky\\s+cursor.{0,40}observational\\s+register\\b",
+      "message": "Title aside is overwrought. Trust the title or unpack plainly.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "phrase-testament-to",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\ba\\s+(?:true\\s+)?testament\\s+to\\b",
+      "message": "Significance-inflation cliché. Almost never appears in unedited human technical prose.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "phrase-reminder-of",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\ba\\s+(?:stark|powerful|sobering|striking)\\s+reminder\\s+of\\b",
+      "message": "Significance-inflation cliché. Cut or replace with the specific point.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "phrase-plays-a-role",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\bplays?\\s+a\\s+(?:vital|crucial|pivotal|central|key|critical|fundamental)\\s+role\\b",
+      "message": "Formula phrase. Either say what it does, or say nothing.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "phrase-underscores",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\bunderscor(?:es|ing|ed)\\s+the\\s+(?:significance|importance|need|value)\\b",
+      "message": "LLM tic. Replace with 'shows', 'demonstrates', or just state the claim.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "phrase-stands-as",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\bstands?\\s+as\\s+(?:a\\s+|an\\s+)",
+      "message": "Copula-avoidance via weighty linking verb. Use plain 'is'.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "phrase-serves-as",
+      "kind": "single-phrase",
+      "severity": "info",
+      "pattern": "\\bserves?\\s+as\\s+(?:a\\s+|an\\s+|the\\s+)",
+      "message": "Copula-avoidance via weighty linking verb. Often 'is' is cleaner.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "phrase-rich-heritage",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\b(?:rich|profound|deep|enduring)\\s+(?:heritage|legacy|tradition)\\b",
+      "message": "Encyclopedic-flavor cliché. Rare in real domain writing.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "phrase-indelible-mark",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\b(?:indelible\\s+mark|lasting\\s+impact|enduring\\s+impact|deeply\\s+rooted|steadfast\\s+dedication)\\b",
+      "message": "Encyclopedic-flavor cliché. Cut.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "phrase-contributes-to",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\bcontributes?\\s+to\\s+(?:the\\s+)?(?:overall|broader|wider|larger)\\s+",
+      "message": "Vacuous abstraction. State what the contribution is.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "phrase-it-is-important",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\bit\\s+is\\s+(?:important|crucial|essential|vital|necessary)\\s+to\\s+(?:note|recognize|understand|remember|consider|acknowledge)\\b",
+      "message": "Prescriptive-narrator frame. State the point directly.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "phrase-one-must",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\b(?:one\\s+must|we\\s+must)\\s+(?:consider|acknowledge|recognize|understand)\\b",
+      "message": "Lecturing the reader. Cut or convert to plain statement.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "phrase-needless-to-say",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\b(?:needless\\s+to\\s+say|it\\s+goes\\s+without\\s+saying)\\b",
+      "message": "If it's needless, cut it.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "phrase-worth-mentioning",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\bit'?s?\\s+worth\\s+(?:mentioning|noting|pointing\\s+out)\\s+that\\b",
+      "message": "Throat-clearing. State the thing.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "phrase-recent-years",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "^\\s*In\\s+recent\\s+years,",
+      "message": "Temporal-frame opener. Lead with the claim.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "phrase-past-decade",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "^\\s*Over\\s+the\\s+(?:past|last)\\s+(?:decade|few\\s+years)",
+      "message": "Temporal-frame opener. Lead with the claim.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "phrase-todays-world",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\bIn\\s+today'?s\\s+(?:fast-paced\\s+)?(?:world|era|landscape)\\b",
+      "message": "Cliché opener. Cut entirely.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "phrase-modern-era",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\bIn\\s+(?:the\\s+)?(?:modern\\s+era|an\\s+increasingly\\s+\\w+\\s+world)\\b",
+      "message": "Cliché opener. Cut.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "phrase-research-unveiled",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\b(?:research|the\\s+study|the\\s+paper)\\s+(?:unveiled|revealed|discovered|uncovered)\\b",
+      "message": "Anthropomorphized research verb. Use 'found', 'observed', 'reported'.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "phrase-vague-attribution",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\b(?:industry\\s+reports\\s+suggest|observers\\s+have\\s+noted|experts\\s+(?:argue|contend|suggest)|critics\\s+contend)\\b",
+      "message": "Sourceless-authority frame. Name the source or drop the claim.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "phrase-not-just-but",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\bnot\\s+just\\s+\\S+(?:\\s+\\S+){0,5}?\\s+[—–-]\\s+\\S+",
+      "message": "'This is not just X — it's Y' escalation. Tell of LLM rhetoric. Convert to plain claim.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "phrase-regime",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\bregime[s]?\\b",
+      "message": "'Regime' carries political connotations in current usage; for technical contexts prefer 'phase', 'mode', or 'state'.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "repeat-load-bearing",
+      "kind": "repeated-phrase",
+      "severity": "error",
+      "pattern": "\\bload[-\\s]bearing\\b",
+      "max_count": 1,
+      "message": "Meme phrase. Use one place where the metaphor pulls weight; replace others with 'central', 'primary', 'defended claim'.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "repeat-structurally",
+      "kind": "repeated-phrase",
+      "severity": "warn",
+      "pattern": "\\bstructurally\\b",
+      "max_count": 2,
+      "message": "Empty intensifier. Either give the number that justifies it or drop the adverb.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "repeat-materially",
+      "kind": "repeated-phrase",
+      "severity": "warn",
+      "pattern": "\\bmaterially\\b",
+      "max_count": 2,
+      "message": "Empty intensifier. Either give the number or drop the adverb.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "repeat-meaningfully",
+      "kind": "repeated-phrase",
+      "severity": "warn",
+      "pattern": "\\bmeaningfully\\b",
+      "max_count": 2,
+      "message": "Empty intensifier. Either give the number or drop the adverb.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "repeat-already-compound",
+      "kind": "repeated-phrase",
+      "severity": "info",
+      "pattern": "\\balready-\\w+",
+      "max_count": 5,
+      "message": "Already-Y compound used many times. Vary phrasing; 'previously', 'prior', plain past tense work too.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "repeat-not-x-but-y",
+      "kind": "repeated-phrase",
+      "severity": "warn",
+      "pattern": "\\bis\\s+not\\s+[^.\\n]{1,80}?\\s+but\\s+\\w",
+      "max_count": 3,
+      "message": "'Not X but Y' parallelism is a tell when stacked. Spread out or convert to 'Y, not X'.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "repeat-what-x-cleft",
+      "kind": "repeated-phrase",
+      "severity": "warn",
+      "pattern": "^\\s*What\\s+\\w+(?:\\s+\\w+){0,4}?\\s+(?:makes|is|carries|needs|does|matters|changes|survives)\\b",
+      "max_count": 2,
+      "message": "'What X is Y' cleft. Composed-not-written. Convert to direct subject-verb.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)",
+      "flags": "im"
+    },
+    {
+      "id": "cluster-padded-vocab",
+      "kind": "cluster",
+      "severity": "warn",
+      "pattern": "\\b(?:showcasing|highlighting|emphasizing|enhance(?:s|d|ment)?|fostering|leverag(?:e|es|ed|ing)|harness(?:es|ed|ing)?|robust|seamless|cutting-edge|pivotal|vibrant|meticulous|intricate|comprehensive|holistic|nuanced|profound|paramount)\\b",
+      "threshold": 3,
+      "scope": "200w",
+      "message": "Padded-vocabulary cluster (≥3 in 200-word span). Mid-2024+ LLM residue. Replace with plain words.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "cluster-hedges",
+      "kind": "cluster",
+      "severity": "warn",
+      "pattern": "\\b(?:notably|obviously|clearly|undoubtedly|of\\s+course|importantly|crucially|essentially|fundamentally)\\b",
+      "threshold": 3,
+      "scope": "paragraph",
+      "message": "Hedge/booster cluster (≥3 in one paragraph). Empty intensifiers; drop most.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "cluster-firstly-thirdly",
+      "kind": "cluster",
+      "severity": "warn",
+      "pattern": "\\b(?:[Ff]irstly|[Ss]econdly|[Tt]hirdly|[Ll]astly)\\b",
+      "threshold": 3,
+      "scope": "paragraph",
+      "message": "Sequenced 'firstly/secondly/thirdly' in one paragraph. Humans usually mix transitions.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "cluster-significance-verbs",
+      "kind": "cluster",
+      "severity": "warn",
+      "pattern": "\\b(?:underscores?|highlights?|emphasi[sz]es?|illustrates?|exemplifies?)\\s+(?:the\\s+)?(?:significance|importance|need|value|crucial)\\b",
+      "threshold": 2,
+      "scope": "paragraph",
+      "message": "Multiple significance-verb constructions in one paragraph. State the point.",
+      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
+    },
+    {
+      "id": "doubled-cleft",
+      "kind": "proximity",
+      "severity": "warn",
+      "pattern": "\\bWhat\\s+\\w+(?:\\s+\\w+){0,6}?\\s+(?:makes|is|carries|needs|does|matters|changes|survives)\\s+\\w+(?:\\s+\\w+){0,6}?\\s+is\\b",
+      "max_distance_chars": 220,
+      "message": "Doubled 'What X is Y' cleft (two within close range). Sharper tell than single use; convert at least one to plain subject-verb.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "sentence-too-long",
+      "kind": "engine",
+      "severity": "warn",
+      "config": {
+        "warn_at_words": 45,
+        "error_at_words": 65
+      },
+      "description": "Long-sentence detector. Sentence ≥ warn_at_words → info; ≥ error_at_words → warn. Detector requires per-line splitter; implemented in each engine.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "bold-overuse",
+      "kind": "engine",
+      "severity": "info",
+      "config": {
+        "max_per_paragraph": 2
+      },
+      "description": "Flags paragraphs with ≥3 bold spans. Requires markdown-aware paragraph segmentation; implemented in each engine.",
+      "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "density-em-dash-line",
+      "kind": "engine",
+      "severity": "info",
+      "config": {
+        "max_per_line": 2
+      },
+      "description": "Flags lines with ≥3 em/en dashes. Per-line scan; implemented in each engine.",
+      "source": "muriel (project-specific; parent-project license)"
     }
   ]
 }
