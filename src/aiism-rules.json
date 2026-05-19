@@ -1,11 +1,11 @@
 {
   "$schema": "./aiism-rules.LICENSE.md",
-  "version": 4,
+  "version": 5,
   "description": "Canonical AI-tell rule table for prose-audit. Loaded by science-agent/prose-audit.js. Engine-specific rules (custom traversal) are declared here for discoverability; their detectors live in code.",
   "owners": [
     "science-agent (canonical) — github.com/andyed/science-agent"
   ],
-  "notes": "v4 (2026-05-19): added 4 rules sourced from amperser/proselint v3 (BSD-3-Clause) and activated 2 new rule-kind engines (single-phrase, hard-artifact) in prose-audit.js, which also activates the 19 muriel single-phrase + hard-artifact rules that were sitting unused in the JSON since v1. v3 had earlier removed CC-BY-SA-4.0 (Vale/Wiki-derived) muriel rules; v2 removed CC BY-NC 4.0 (ARS) content.",
+  "notes": "v5 (2026-05-19): added 3 fragment-detection rules (fragment-discourse-marker, fragment-participial, fragment-relative-clause) addressing non-sentence-sentence patterns identified during AllSERP paper cleanup. v4 added 4 proselint-derived BSD-3-Clause rules. v3 removed CC-BY-SA-4.0; v2 removed CC BY-NC 4.0.",
   "rules": [
     {
       "id": "em-dash-total",
@@ -315,6 +315,42 @@
       "message": "Excessive apologizing. State what's known and what's open instead.",
       "source": "proselint v3 misc.apologizing (BSD-3-Clause); github.com/amperser/proselint",
       "flags": "gi"
+    },
+    {
+      "id": "fragment-discourse-marker",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "(?:^|(?<=[.!?]\\s))\\s*(?:Such\\s+(?:as|that)|Including|Excluding|Especially|For\\s+(?:example|instance)|Importantly|Notably|Crucially|Significantly|Hence|Therefore|Thus|Conversely|Moreover|Furthermore|Specifically|In\\s+(?:particular|summary|conclusion|essence|short|brief|fact))[,]?\\s+[^.!?\\n]{1,60}\\.\\s+(?=[A-Z])",
+      "message": "Possible sentence fragment: discourse marker (Such as / Including / Importantly / etc.) followed by short clause ending in '.'. Either splice into the previous sentence, replace the period with a comma, or rewrite as a full sentence.",
+      "source": "first-party observation (AllSERP cleanup); fragment patterns common to AI/academic prose",
+      "flags": "g"
+    },
+    {
+      "id": "fragment-participial",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "(?:^|(?<=[.!?]\\s))\\s*(?:Resulting|Including|Excluding|Following|Given|Based|Considering|Aiming|Hoping|Looking|Stemming|Owing|Building|Drawing|Using)\\s+(?:in|on|to|at|from|of|upon|that|the|a|an|this)\\s+[^.!?\\n]{1,60}\\.\\s+(?=[A-Z])",
+      "message": "Possible sentence fragment: participial phrase (Resulting in / Following / Given / Based on / etc.) as standalone sentence. Attach to a main clause or convert to active voice with a subject.",
+      "source": "first-party observation (AllSERP cleanup); standard fragment pattern in academic prose",
+      "flags": "g"
+    },
+    {
+      "id": "fragment-relative-clause",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "(?:^|(?<=[.!?]\\s))\\s*(?:Which|That|Who|Whom|Whose)\\s+[^.!?\\n]{1,60}\\.\\s+(?=[A-Z])",
+      "message": "Possible sentence fragment: relative clause (Which / That / Who / etc.) as standalone sentence. Relative clauses are dependent — splice into the previous sentence with a comma, or restart with a subject.",
+      "source": "first-party observation (AllSERP cleanup); standard fragment pattern",
+      "flags": "g"
+    },
+    {
+      "id": "fragment-standalone-adverb",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "(?:^|(?<=[.!?]\\s))\\s*(?:Importantly|Notably|Crucially|Significantly|Hence|Therefore|Thus|Conversely|Furthermore|Moreover|Indeed|Specifically)\\.\\s+(?=[A-Z])",
+      "message": "Standalone discourse-adverb as 'sentence' (e.g. 'Importantly.' / 'Notably.'). Attach to the following sentence: 'Importantly, X is Y.'",
+      "source": "first-party observation (AllSERP cleanup)",
+      "flags": "g"
     }
   ]
 }

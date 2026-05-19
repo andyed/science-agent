@@ -2,6 +2,16 @@
 
 # Changelog
 
+## 0.6.0 (2026-05-19)
+
+- **Added 4 sentence-fragment detectors** triggered by AllSERP paper cleanup (non-sentence-sentence patterns):
+  - `fragment-discourse-marker` — "Such as / Including / Especially / For example / Importantly / Hence / etc." opener followed by ≤60 chars and a period (e.g. "We collected gaze data. Including pixel-accurate bboxes. Then…").
+  - `fragment-participial` — Participial phrase ("Resulting in / Following / Given / Based on / Building on / etc.") as standalone sentence (e.g. "Then we ran the pipeline. Resulting in 2,776 trials.").
+  - `fragment-relative-clause` — Relative clause ("Which / That / Who") as standalone sentence (e.g. "The data validated. Which is why we trust it.").
+  - `fragment-standalone-adverb` — One-word "sentences" like "Importantly." / "Notably." / "Hence." — common in AI prose, fix by attaching to the following sentence.
+- All four are single-phrase rules with length-bounded patterns (≤60 chars between opener and period) so they don't false-positive on legitimate long sentences that happen to start with the same words. Verified zero false positives on allserp-paper/paper.tex (the freshly cleaned-up source).
+- Source attribution: first-party observation grounded in this project's own AllSERP cleanup. These patterns are widely documented in academic writing style guides; the specific regex bounds and message text are first-party.
+
 ## 0.5.0 (2026-05-19)
 
 - **Activated two more native rule-kind engines: `single-phrase` and `hard-artifact`** in [`src/prose-audit.js`](src/prose-audit.js). These engines were missing from the dispatcher in 0.4.0, which meant 19 muriel-derived rules already in the JSON (8 hard-artifact LLM-tooling detectors, 11 single-phrase project-specific tics) were sitting unused. They now fire.

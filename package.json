@@ -1,6 +1,6 @@
 {
   "name": "science-agent",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Improve scientific collaboration in AI-assisted research. Citation validation, claim verification, cross-file consistency.",
   "main": "cli.js",
   "bin": {
