@@ -310,6 +310,47 @@ function auditDocRateLimit(text, rule) {
     return findings;
 }
 
+/** Single-phrase rule — fires on every occurrence of `rule.pattern`. */
+function auditSinglePhrase(text, rule) {
+    const findings = [];
+    const flags = (rule.flags || 'gi').includes('g') ? (rule.flags || 'gi') : ((rule.flags || 'i') + 'g');
+    const re = new RegExp(rule.pattern, flags);
+    let m;
+    while ((m = re.exec(text)) !== null) {
+        const [line, column] = offsetToLineCol(text, m.index);
+        findings.push({
+            line, column, severity: rule.severity,
+            rule: rule.id,
+            message: rule.message_template
+                ? fillTemplate(rule.message_template, { match: m[0] })
+                : rule.message,
+            excerpt: excerpt(text, m.index),
+        });
+        if (re.lastIndex === m.index) re.lastIndex += 1;  // avoid zero-width loop
+    }
+    return findings;
+}
+
+/** Hard-artifact rule — like single-phrase but always error severity and
+ *  meant to run on raw text (not stripped). Catches LLM tooling residue. */
+function auditHardArtifact(text, rule) {
+    const findings = [];
+    const flags = (rule.flags || 'gim');
+    const re = new RegExp(rule.pattern, flags.includes('g') ? flags : flags + 'g');
+    let m;
+    while ((m = re.exec(text)) !== null) {
+        const [line, column] = offsetToLineCol(text, m.index);
+        findings.push({
+            line, column, severity: rule.severity || 'error',
+            rule: rule.id,
+            message: rule.message,
+            excerpt: excerpt(text, m.index),
+        });
+        if (re.lastIndex === m.index) re.lastIndex += 1;
+    }
+    return findings;
+}
+
 /** B3. Colon-list sequences — 2+ consecutive (colon-intro → list) pairs. */
 function auditColonListSequences(text, rule) {
     const findings = [];
@@ -526,6 +567,8 @@ const ENGINE_BY_KIND = {
     'doc-rate-limit':         auditDocRateLimit,
     'sentence-opener-group':  auditThroatClearing,
     'synonym-group':          auditSynonymCycling,
+    'single-phrase':          auditSinglePhrase,
+    'hard-artifact':          auditHardArtifact,
 };
 const ENGINE_BY_ID = {
     'colon-list-sequence':    auditColonListSequences,

@@ -1,11 +1,11 @@
 {
   "$schema": "./aiism-rules.LICENSE.md",
-  "version": 3,
+  "version": 4,
   "description": "Canonical AI-tell rule table for prose-audit. Loaded by science-agent/prose-audit.js. Engine-specific rules (custom traversal) are declared here for discoverability; their detectors live in code.",
   "owners": [
     "science-agent (canonical) — github.com/andyed/science-agent"
   ],
-  "notes": "v3 (2026-05-19): removed CC-BY-SA-4.0 (Wikipedia/Vale-derived) muriel rules so JSON is distributable without share-alike. Remaining rules: muriel project-specific + first-party. v2 had earlier removed CC BY-NC 4.0 content (ARS).",
+  "notes": "v4 (2026-05-19): added 4 rules sourced from amperser/proselint v3 (BSD-3-Clause) and activated 2 new rule-kind engines (single-phrase, hard-artifact) in prose-audit.js, which also activates the 19 muriel single-phrase + hard-artifact rules that were sitting unused in the JSON since v1. v3 had earlier removed CC-BY-SA-4.0 (Vale/Wiki-derived) muriel rules; v2 removed CC BY-NC 4.0 (ARS) content.",
   "rules": [
     {
       "id": "em-dash-total",
@@ -279,6 +279,42 @@
       },
       "description": "Flags lines with ≥3 em/en dashes. Per-line scan; implemented in each engine.",
       "source": "muriel (project-specific; parent-project license)"
+    },
+    {
+      "id": "metadiscourse",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\b(?:The (?:preceding|preceeding) (?:discussion|paragraph (?:demonstrated|showed))|The rest of this article|This (?:chapter|section) (?:discusses|analyzes|examines)|The previous section analyzed)\\b",
+      "message": "Excessive metadiscourse. Cut the meta-commentary and write the thing.",
+      "source": "proselint v3 misc.metadiscourse (BSD-3-Clause); github.com/amperser/proselint",
+      "flags": "g"
+    },
+    {
+      "id": "professional-narcissism",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\bIn recent years,?\\s+an increasing number of [a-zA-Z]{3,}sts have\\b",
+      "message": "Professional narcissism. Talk about the subject, not its study.",
+      "source": "proselint v3 misc.narcissism (BSD-3-Clause); github.com/amperser/proselint",
+      "flags": "gi"
+    },
+    {
+      "id": "hedging-phrases",
+      "kind": "single-phrase",
+      "severity": "info",
+      "pattern": "\\b(?:I would argue that|to a certain degree),?\\s*",
+      "message": "Hedging. State the claim directly.",
+      "source": "proselint v3 hedging (BSD-3-Clause); github.com/amperser/proselint",
+      "flags": "gi"
+    },
+    {
+      "id": "apologizing-more-research",
+      "kind": "single-phrase",
+      "severity": "info",
+      "pattern": "\\bMore research is needed\\b",
+      "message": "Excessive apologizing. State what's known and what's open instead.",
+      "source": "proselint v3 misc.apologizing (BSD-3-Clause); github.com/amperser/proselint",
+      "flags": "gi"
     }
   ]
 }

@@ -2,6 +2,13 @@
 
 # Changelog
 
+## 0.5.0 (2026-05-19)
+
+- **Activated two more native rule-kind engines: `single-phrase` and `hard-artifact`** in [`src/prose-audit.js`](src/prose-audit.js). These engines were missing from the dispatcher in 0.4.0, which meant 19 muriel-derived rules already in the JSON (8 hard-artifact LLM-tooling detectors, 11 single-phrase project-specific tics) were sitting unused. They now fire.
+- **Added 4 BSD-3-Clause rules sourced from amperser/proselint v3**: `metadiscourse` (5 meta-commentary phrases), `professional-narcissism` ("In recent years, an increasing number of Xists have…"), `hedging-phrases` (I would argue that / to a certain degree), `apologizing-more-research` ("More research is needed"). Each entry's `source` field cites proselint and its BSD-3-Clause license. The license file ([`src/aiism-rules.LICENSE.md`](src/aiism-rules.LICENSE.md)) now reproduces the proselint LICENSE verbatim per BSD-3-Clause redistribution requirements.
+- **What this recovers from the 0.4.0 cleanup**: re-establishes meta-commentary detection (was `phrase-it-is-important`), hedging detection (was implicit in cluster-hedges), and a narrower throat-clearing pattern. Doesn't fully replace the 25 CC-BY-SA-4.0 rules removed in 0.4.0 — but adds 4 cleanly-licensed alternatives and activates 19 previously-dormant ones, for a net gain of 23 firing rules.
+- **Known follow-up**: `hard-artifact` engine receives stripped text (loses `oaicite` tokens that sit inside markdown backticks). The fix is to pass raw text to that engine specifically; small refactor.
+
 ## 0.4.0 (2026-05-19)
 
 - **Removed CC-BY-SA-4.0 (Wikipedia/Vale-derived) muriel rules from `aiism-rules.json`** — Drops the 25 rules attributed to `muriel → Wikipedia/Vale (CC-BY-SA-4.0)`: significance-inflation phrases (`phrase-testament-to`, `phrase-plays-a-role`, `phrase-underscores`, `phrase-stands-as`, `phrase-serves-as`, `phrase-rich-heritage`, `phrase-indelible-mark`, `phrase-contributes-to`, `phrase-reminder-of`), prescriptive-narrator framing (`phrase-it-is-important`, `phrase-one-must`, `phrase-needless-to-say`, `phrase-worth-mentioning`), throat-clearing temporal openers (`phrase-recent-years`, `phrase-past-decade`, `phrase-todays-world`, `phrase-modern-era`), anthropomorphized research verbs (`phrase-research-unveiled`), sourceless-authority hedges (`phrase-vague-attribution`), and four cluster detectors (`cluster-padded-vocab`, `cluster-hedges`, `cluster-firstly-thirdly`, `cluster-significance-verbs`).
