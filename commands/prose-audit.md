@@ -17,7 +17,7 @@ Rule data lives in [`src/aiism-rules.json`](../src/aiism-rules.json); detection 
 **Active rule categories (from JSON):**
 
 - First-party threshold rules — `em-dash-total` (≤3/paper), `semicolon-density` (≤2/1000 words), `binary-contrast` (≤2/paper).
-- `muriel`-derived rules — hard LLM-tool artifacts (oaicite tokens, sandbox paths, knowledge-cutoff disclaimers, etc.), project-specific phrase tics, intensifier repetition, padded-vocabulary clusters, hedge clusters, definitional-cleft proximity. Some of these carry CC-BY-SA-4.0 attribution from Wikipedia/Vale provenance; per-rule `source` field documents this.
+- `muriel`-derived project-specific rules — hard LLM-tool artifacts (oaicite tokens, sandbox paths, knowledge-cutoff disclaimers, etc.), Andy-specific phrase tics, intensifier-repetition detectors, definitional-cleft proximity. All MIT-compatible; CC-BY-SA-4.0-attributed rules were removed in v0.4.0 (see CHANGELOG).
 
 **Engines available but currently dataless** (the JS detector exists; no rule entries fire them until populated):
 `flagged-term-group`, `sentence-opener-group`, `synonym-group`, `colon-list-sequence` engine, `rule-of-three` engine.

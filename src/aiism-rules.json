@@ -1,11 +1,11 @@
 {
   "$schema": "./aiism-rules.LICENSE.md",
-  "version": 2,
+  "version": 3,
   "description": "Canonical AI-tell rule table for prose-audit. Loaded by science-agent/prose-audit.js. Engine-specific rules (custom traversal) are declared here for discoverability; their detectors live in code.",
   "owners": [
     "science-agent (canonical) — github.com/andyed/science-agent"
   ],
-  "notes": "v2 (2026-05-18): removed all CC BY-NC 4.0-derived content (ARS v3.9.4 flagged-term / throat-clearing / synonym-cycling / colon-list-sequence / rule-of-three entries) so the file is distributable under science-agent's MIT license. Threshold-based rules (em-dash, semicolon, binary-contrast) retained with origin re-attributed to first-party observation. The remaining rules from muriel (CC-BY-SA-4.0 and project-specific) keep their original source attribution per entry.",
+  "notes": "v3 (2026-05-19): removed CC-BY-SA-4.0 (Wikipedia/Vale-derived) muriel rules so JSON is distributable without share-alike. Remaining rules: muriel project-specific + first-party. v2 had earlier removed CC BY-NC 4.0 content (ARS).",
   "rules": [
     {
       "id": "em-dash-total",
@@ -180,158 +180,6 @@
       "source": "muriel (project-specific; parent-project license)"
     },
     {
-      "id": "phrase-testament-to",
-      "kind": "single-phrase",
-      "severity": "warn",
-      "pattern": "\\ba\\s+(?:true\\s+)?testament\\s+to\\b",
-      "message": "Significance-inflation cliché. Almost never appears in unedited human technical prose.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
-      "id": "phrase-reminder-of",
-      "kind": "single-phrase",
-      "severity": "warn",
-      "pattern": "\\ba\\s+(?:stark|powerful|sobering|striking)\\s+reminder\\s+of\\b",
-      "message": "Significance-inflation cliché. Cut or replace with the specific point.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
-      "id": "phrase-plays-a-role",
-      "kind": "single-phrase",
-      "severity": "warn",
-      "pattern": "\\bplays?\\s+a\\s+(?:vital|crucial|pivotal|central|key|critical|fundamental)\\s+role\\b",
-      "message": "Formula phrase. Either say what it does, or say nothing.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
-      "id": "phrase-underscores",
-      "kind": "single-phrase",
-      "severity": "warn",
-      "pattern": "\\bunderscor(?:es|ing|ed)\\s+the\\s+(?:significance|importance|need|value)\\b",
-      "message": "LLM tic. Replace with 'shows', 'demonstrates', or just state the claim.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
-      "id": "phrase-stands-as",
-      "kind": "single-phrase",
-      "severity": "warn",
-      "pattern": "\\bstands?\\s+as\\s+(?:a\\s+|an\\s+)",
-      "message": "Copula-avoidance via weighty linking verb. Use plain 'is'.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
-      "id": "phrase-serves-as",
-      "kind": "single-phrase",
-      "severity": "info",
-      "pattern": "\\bserves?\\s+as\\s+(?:a\\s+|an\\s+|the\\s+)",
-      "message": "Copula-avoidance via weighty linking verb. Often 'is' is cleaner.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
-      "id": "phrase-rich-heritage",
-      "kind": "single-phrase",
-      "severity": "warn",
-      "pattern": "\\b(?:rich|profound|deep|enduring)\\s+(?:heritage|legacy|tradition)\\b",
-      "message": "Encyclopedic-flavor cliché. Rare in real domain writing.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
-      "id": "phrase-indelible-mark",
-      "kind": "single-phrase",
-      "severity": "warn",
-      "pattern": "\\b(?:indelible\\s+mark|lasting\\s+impact|enduring\\s+impact|deeply\\s+rooted|steadfast\\s+dedication)\\b",
-      "message": "Encyclopedic-flavor cliché. Cut.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
-      "id": "phrase-contributes-to",
-      "kind": "single-phrase",
-      "severity": "warn",
-      "pattern": "\\bcontributes?\\s+to\\s+(?:the\\s+)?(?:overall|broader|wider|larger)\\s+",
-      "message": "Vacuous abstraction. State what the contribution is.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
-      "id": "phrase-it-is-important",
-      "kind": "single-phrase",
-      "severity": "warn",
-      "pattern": "\\bit\\s+is\\s+(?:important|crucial|essential|vital|necessary)\\s+to\\s+(?:note|recognize|understand|remember|consider|acknowledge)\\b",
-      "message": "Prescriptive-narrator frame. State the point directly.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
-      "id": "phrase-one-must",
-      "kind": "single-phrase",
-      "severity": "warn",
-      "pattern": "\\b(?:one\\s+must|we\\s+must)\\s+(?:consider|acknowledge|recognize|understand)\\b",
-      "message": "Lecturing the reader. Cut or convert to plain statement.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
-      "id": "phrase-needless-to-say",
-      "kind": "single-phrase",
-      "severity": "warn",
-      "pattern": "\\b(?:needless\\s+to\\s+say|it\\s+goes\\s+without\\s+saying)\\b",
-      "message": "If it's needless, cut it.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
-      "id": "phrase-worth-mentioning",
-      "kind": "single-phrase",
-      "severity": "warn",
-      "pattern": "\\bit'?s?\\s+worth\\s+(?:mentioning|noting|pointing\\s+out)\\s+that\\b",
-      "message": "Throat-clearing. State the thing.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
-      "id": "phrase-recent-years",
-      "kind": "single-phrase",
-      "severity": "warn",
-      "pattern": "^\\s*In\\s+recent\\s+years,",
-      "message": "Temporal-frame opener. Lead with the claim.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
-      "id": "phrase-past-decade",
-      "kind": "single-phrase",
-      "severity": "warn",
-      "pattern": "^\\s*Over\\s+the\\s+(?:past|last)\\s+(?:decade|few\\s+years)",
-      "message": "Temporal-frame opener. Lead with the claim.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
-      "id": "phrase-todays-world",
-      "kind": "single-phrase",
-      "severity": "warn",
-      "pattern": "\\bIn\\s+today'?s\\s+(?:fast-paced\\s+)?(?:world|era|landscape)\\b",
-      "message": "Cliché opener. Cut entirely.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
-      "id": "phrase-modern-era",
-      "kind": "single-phrase",
-      "severity": "warn",
-      "pattern": "\\bIn\\s+(?:the\\s+)?(?:modern\\s+era|an\\s+increasingly\\s+\\w+\\s+world)\\b",
-      "message": "Cliché opener. Cut.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
-      "id": "phrase-research-unveiled",
-      "kind": "single-phrase",
-      "severity": "warn",
-      "pattern": "\\b(?:research|the\\s+study|the\\s+paper)\\s+(?:unveiled|revealed|discovered|uncovered)\\b",
-      "message": "Anthropomorphized research verb. Use 'found', 'observed', 'reported'.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
-      "id": "phrase-vague-attribution",
-      "kind": "single-phrase",
-      "severity": "warn",
-      "pattern": "\\b(?:industry\\s+reports\\s+suggest|observers\\s+have\\s+noted|experts\\s+(?:argue|contend|suggest)|critics\\s+contend)\\b",
-      "message": "Sourceless-authority frame. Name the source or drop the claim.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
       "id": "phrase-not-just-but",
       "kind": "single-phrase",
       "severity": "warn",
@@ -391,65 +239,6 @@
       "max_count": 5,
       "message": "Already-Y compound used many times. Vary phrasing; 'previously', 'prior', plain past tense work too.",
       "source": "muriel (project-specific; parent-project license)"
-    },
-    {
-      "id": "repeat-not-x-but-y",
-      "kind": "repeated-phrase",
-      "severity": "warn",
-      "pattern": "\\bis\\s+not\\s+[^.\\n]{1,80}?\\s+but\\s+\\w",
-      "max_count": 3,
-      "message": "'Not X but Y' parallelism is a tell when stacked. Spread out or convert to 'Y, not X'.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
-      "id": "repeat-what-x-cleft",
-      "kind": "repeated-phrase",
-      "severity": "warn",
-      "pattern": "^\\s*What\\s+\\w+(?:\\s+\\w+){0,4}?\\s+(?:makes|is|carries|needs|does|matters|changes|survives)\\b",
-      "max_count": 2,
-      "message": "'What X is Y' cleft. Composed-not-written. Convert to direct subject-verb.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)",
-      "flags": "im"
-    },
-    {
-      "id": "cluster-padded-vocab",
-      "kind": "cluster",
-      "severity": "warn",
-      "pattern": "\\b(?:showcasing|highlighting|emphasizing|enhance(?:s|d|ment)?|fostering|leverag(?:e|es|ed|ing)|harness(?:es|ed|ing)?|robust|seamless|cutting-edge|pivotal|vibrant|meticulous|intricate|comprehensive|holistic|nuanced|profound|paramount)\\b",
-      "threshold": 3,
-      "scope": "200w",
-      "message": "Padded-vocabulary cluster (≥3 in 200-word span). Mid-2024+ LLM residue. Replace with plain words.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
-      "id": "cluster-hedges",
-      "kind": "cluster",
-      "severity": "warn",
-      "pattern": "\\b(?:notably|obviously|clearly|undoubtedly|of\\s+course|importantly|crucially|essentially|fundamentally)\\b",
-      "threshold": 3,
-      "scope": "paragraph",
-      "message": "Hedge/booster cluster (≥3 in one paragraph). Empty intensifiers; drop most.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
-      "id": "cluster-firstly-thirdly",
-      "kind": "cluster",
-      "severity": "warn",
-      "pattern": "\\b(?:[Ff]irstly|[Ss]econdly|[Tt]hirdly|[Ll]astly)\\b",
-      "threshold": 3,
-      "scope": "paragraph",
-      "message": "Sequenced 'firstly/secondly/thirdly' in one paragraph. Humans usually mix transitions.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
-    },
-    {
-      "id": "cluster-significance-verbs",
-      "kind": "cluster",
-      "severity": "warn",
-      "pattern": "\\b(?:underscores?|highlights?|emphasi[sz]es?|illustrates?|exemplifies?)\\s+(?:the\\s+)?(?:significance|importance|need|value|crucial)\\b",
-      "threshold": 2,
-      "scope": "paragraph",
-      "message": "Multiple significance-verb constructions in one paragraph. State the point.",
-      "source": "muriel → Wikipedia/Vale (CC-BY-SA-4.0)"
     },
     {
       "id": "doubled-cleft",

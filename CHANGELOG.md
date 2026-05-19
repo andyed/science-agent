@@ -2,6 +2,16 @@
 
 # Changelog
 
+## 0.4.0 (2026-05-19)
+
+- **Removed CC-BY-SA-4.0 (Wikipedia/Vale-derived) muriel rules from `aiism-rules.json`** — Drops the 25 rules attributed to `muriel → Wikipedia/Vale (CC-BY-SA-4.0)`: significance-inflation phrases (`phrase-testament-to`, `phrase-plays-a-role`, `phrase-underscores`, `phrase-stands-as`, `phrase-serves-as`, `phrase-rich-heritage`, `phrase-indelible-mark`, `phrase-contributes-to`, `phrase-reminder-of`), prescriptive-narrator framing (`phrase-it-is-important`, `phrase-one-must`, `phrase-needless-to-say`, `phrase-worth-mentioning`), throat-clearing temporal openers (`phrase-recent-years`, `phrase-past-decade`, `phrase-todays-world`, `phrase-modern-era`), anthropomorphized research verbs (`phrase-research-unveiled`), sourceless-authority hedges (`phrase-vague-attribution`), and four cluster detectors (`cluster-padded-vocab`, `cluster-hedges`, `cluster-firstly-thirdly`, `cluster-significance-verbs`).
+- **Why:** share-alike would have required any redistribution of the JSON to remain CC-BY-SA-4.0, constraining commercial use of science-agent and downstream consumers. Removing leaves the JSON cleanly MIT-distributable.
+- **What stays (32 rules):** 8 muriel hard-artifact detectors (project-specific LLM-tooling residue), 11 muriel project-specific phrase tics, 5 muriel intensifier-repetition rules, `doubled-cleft`, 3 engine declarations (sentence-too-long, bold-overuse, density-em-dash-line), 3 first-party threshold rules (em-dash-total, semicolon-density, binary-contrast).
+- **What's lost:** universal AI-tell coverage — the Vale/Wikipedia patterns applied to anyone's prose. Replacements can be added over time as first-party rule entries grounded in observed cleanups.
+- **JS engines unchanged.** All rule-kind handlers in `prose-audit.js` still exist and will fire if matching JSON entries are added.
+- **License file** ([`src/aiism-rules.LICENSE.md`](src/aiism-rules.LICENSE.md)) updated: only MIT and parent-project sources remain in the obligations table; CC-BY-SA-4.0 and CC BY-NC 4.0 moved to a "History" section noting both removals.
+- **Follow-up planned for muriel** itself — the inline tables in `muriel/aiism.py` still contain the same 25 CC-BY-SA-4.0 rules. Cleaning muriel matches science-agent's commercial-use posture; tracked as a separate change.
+
 ## 0.3.0 (2026-05-19)
 
 - **Removed all CC BY-NC 4.0 content from `aiism-rules.json`** — The ARS-derived rule lists shipped briefly in 0.2.0 (`flagged-term` 25-word list, `throat-clearing` 12-opener list, `synonym-cycling` 6-group list, plus the `colon-list-sequence` and `rule-of-three` engine entries) carried a non-commercial restriction that would have constrained downstream use of science-agent and any consumer (muriel, plugins). They are gone in JSON v2.
