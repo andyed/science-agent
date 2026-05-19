@@ -1,0 +1,124 @@
+{
+  "$schema": "./aiism-rules.schema.md",
+  "version": 1,
+  "description": "Canonical AI-tell rule table for prose-audit. Designed to be loaded by multiple engines (currently science-agent/prose-audit.js; planned: muriel/aiism.py via follow-up refactor). Engine-specific rules (those that need custom traversal logic) are declared here for discoverability but their detectors live in code.",
+  "owners": [
+    "science-agent (canonical) — github.com/andyed/science-agent",
+    "muriel (planned consumer) — local sibling repo"
+  ],
+  "rules": [
+    {
+      "id": "flagged-term",
+      "kind": "flagged-term-group",
+      "severity": "warn",
+      "message_template": "\"{term}\" — overused AI-text word. Consider: {alternatives}",
+      "source": "academic-research-skills v3.9.4 (CC BY-NC 4.0); list is functional/factual",
+      "terms": [
+        { "lemma": "delv(?:e|es|ed|ing)",     "alternatives": "examine, investigate, analyze, explore" },
+        { "lemma": "tapestr(?:y|ies)",         "alternatives": "network, interplay, system, mix" },
+        { "lemma": "landscapes?",              "alternatives": "field, domain, context" },
+        { "lemma": "pivotal",                  "alternatives": "important, central, key" },
+        { "lemma": "crucial(?:ly)?",           "alternatives": "essential, necessary, critical" },
+        { "lemma": "foster(?:s|ed|ing)?",      "alternatives": "promote, develop, encourage" },
+        { "lemma": "showcas(?:e|es|ed|ing)",   "alternatives": "demonstrate, illustrate, present" },
+        { "lemma": "testament",                "alternatives": "evidence, indicator, demonstration" },
+        { "lemma": "navigat(?:e|es|ed|ing)",   "alternatives": "manage, address, handle" },
+        { "lemma": "leverag(?:e|es|ed|ing)",   "alternatives": "use, employ, apply" },
+        { "lemma": "realms?",                  "alternatives": "domain, field, area" },
+        { "lemma": "embark(?:s|ed|ing)?",      "alternatives": "begin, initiate, undertake" },
+        { "lemma": "underscor(?:e|es|ed|ing)", "alternatives": "emphasize, highlight, stress" },
+        { "lemma": "multifaceted",             "alternatives": "complex, varied, multilayered" },
+        { "lemma": "nuanced",                  "alternatives": "subtle, detailed, fine-grained" },
+        { "lemma": "comprehensive(?:ly)?",     "alternatives": "thorough, extensive, detailed" },
+        { "lemma": "robust(?:ly)?",            "alternatives": "reliable, strong, rigorous" },
+        { "lemma": "intricate(?:ly)?",         "alternatives": "complex, detailed, elaborate" },
+        { "lemma": "cornerstones?",            "alternatives": "foundation, basis, core element" },
+        { "lemma": "paradigms?",               "alternatives": "framework, model, approach" },
+        { "lemma": "synerg(?:y|ies)",          "alternatives": "interaction, cooperation, combined effect" },
+        { "lemma": "holistic(?:ally)?",        "alternatives": "integrated, whole-system" },
+        { "lemma": "streamlin(?:e|es|ed|ing)", "alternatives": "simplify, optimize" },
+        { "lemma": "cutting[- ]edge",          "alternatives": "recent, advanced, state-of-the-art" },
+        { "lemma": "groundbreaking",           "alternatives": "novel, innovative, pioneering" }
+      ]
+    },
+    {
+      "id": "em-dash-total",
+      "kind": "doc-count-limit",
+      "severity": "warn",
+      "pattern": "—",
+      "limit": 3,
+      "message_template": "Em-dash #{n} of {total}. Limit is ≤{limit} per paper (recommend 0–1). Replace with commas, parentheses, or separate sentences.",
+      "source": "academic-research-skills v3.9.4 (CC BY-NC 4.0)"
+    },
+    {
+      "id": "semicolon-density",
+      "kind": "doc-rate-limit",
+      "severity": "warn",
+      "pattern": ";",
+      "per_1000_words": 2,
+      "message_template": "Semicolon #{n} of {total} ({rate}/1000 words; limit {limit}/1000). Use a period or restructure into parallel clauses.",
+      "source": "academic-research-skills v3.9.4 (CC BY-NC 4.0)"
+    },
+    {
+      "id": "throat-clearing",
+      "kind": "sentence-opener-group",
+      "severity": "warn",
+      "message_template": "\"{opener}…\" — {note}",
+      "source": "academic-research-skills v3.9.4 (CC BY-NC 4.0)",
+      "openers": [
+        { "pattern": "In the realm of\\b",                      "note": "Delete. Start with the actual subject." },
+        { "pattern": "It'?s important to note that\\b",         "note": "Delete. If it's important, content speaks for itself." },
+        { "pattern": "It is worth (?:mentioning|noting|pointing out) that\\b", "note": "Delete. State the thing." },
+        { "pattern": "In today'?s (?:rapidly evolving|fast-paced)\\b", "note": "Delete. Timestamped cliché." },
+        { "pattern": "This serves as a testament to\\b",        "note": "Replace with a direct claim (\"This demonstrates...\")." },
+        { "pattern": "It goes without saying that\\b",          "note": "If it goes without saying, don't say it." },
+        { "pattern": "In order to\\b",                          "note": "Replace with \"To\"." },
+        { "pattern": "It should be noted that\\b",              "note": "Delete. Just note it." },
+        { "pattern": "As a matter of fact\\b",                  "note": "Delete. State the fact." },
+        { "pattern": "When it comes to\\b",                     "note": "Replace with the subject directly." },
+        { "pattern": "At the end of the day\\b",                "note": "Delete. Colloquial and vague." },
+        { "pattern": "With that being said\\b",                 "note": "Delete or use \"However\" if a contrast is intended." }
+      ]
+    },
+    {
+      "id": "synonym-cycling",
+      "kind": "synonym-group",
+      "severity": "warn",
+      "scope": "paragraph",
+      "threshold": 3,
+      "message_template": "Paragraph cycles through {count} {group}-synonyms: {members}. Pick one term and repeat it — consistent terminology is clarity, not weakness.",
+      "source": "academic-research-skills v3.9.4 (CC BY-NC 4.0)",
+      "groups": [
+        { "name": "importance",         "members": ["important", "crucial", "essential", "vital", "critical", "paramount", "pivotal", "significant"] },
+        { "name": "show",               "members": ["shows", "demonstrates", "illustrates", "reveals", "highlights", "underscores", "emphasizes", "showcases"] },
+        { "name": "strong",             "members": ["robust", "strong", "powerful", "sturdy", "resilient", "rigorous", "solid"] },
+        { "name": "study-participants", "members": ["students", "learners", "participants", "subjects", "respondents", "individuals"] },
+        { "name": "complex",            "members": ["complex", "intricate", "multifaceted", "nuanced", "elaborate", "sophisticated", "multilayered"] },
+        { "name": "use",                "members": ["use", "leverage", "utilize", "employ", "apply", "harness"] }
+      ]
+    },
+    {
+      "id": "colon-list-sequence",
+      "kind": "engine",
+      "severity": "warn",
+      "source": "academic-research-skills v3.9.4 (CC BY-NC 4.0)",
+      "description": "Fires when 2+ consecutive (colon-intro → list) paragraphs occur. Engine-specific because it requires paragraph segmentation and list-marker detection."
+    },
+    {
+      "id": "rule-of-three",
+      "kind": "engine",
+      "severity": "info",
+      "source": "academic-research-skills v3.9.4 (CC BY-NC 4.0)",
+      "config": { "min_lists_per_section": 2, "exact_items": 3 },
+      "description": "Fires when every list in a section has exactly N items (default 3) and the section has at least M lists (default 2)."
+    },
+    {
+      "id": "binary-contrast",
+      "kind": "engine",
+      "severity": "warn",
+      "source": "academic-research-skills v3.9.4 (CC BY-NC 4.0)",
+      "config": { "limit_per_paper": 2 },
+      "description": "Fires when 'Not X. Y.' / 'Not just X — Y' patterns exceed the per-paper limit."
+    }
+  ]
+}

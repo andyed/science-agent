@@ -38,8 +38,12 @@ Usage:
   science-agent aggregate <notebooks-dir>       Generate key-claims aggregate
     -o <path>                                     Output file (default: stdout)
   science-agent prose-audit <file-or-dir>       Lint paper drafts for AI-tell prose
+                                                  (.md, .ipynb, .tex; native JS rules +
+                                                   muriel.aiism when available)
     --severity=warn                               Exit nonzero at this severity (info|warn|error)
     --no-pencil                                   Don't skip pencil-locked sentences
+    --no-muriel                                   Skip the Python muriel.aiism pass (native only)
+    --no-native                                   Skip the native ARS rule set (muriel only)
   science-agent figure-audit <INDEX.md>         Verify figure caption numerics against summary.json sidecars
 
 Options:
@@ -422,6 +426,8 @@ async function main() {
         const respectPencil = flags['respect-pencil'] !== 'false' && flags['no-pencil'] !== true;
         const severity = flags.severity || 'warn';
         const summary = flags.summary === true;
+        const native = flags['no-native'] !== true;
+        const muriel = flags['no-muriel'] !== true;
         const stat = fs.statSync(targetPath);
 
         let progressShown = 0;
@@ -436,18 +442,20 @@ async function main() {
             : null;
 
         const results = stat.isDirectory()
-            ? auditDirectory(targetPath, { respectPencil, onProgress })
-            : [auditProse(targetPath, { respectPencil })];
+            ? auditDirectory(targetPath, { respectPencil, native, muriel, onProgress })
+            : [auditProse(targetPath, { respectPencil, native, muriel })];
+
+        const sourcesNote = `  Sources: native JS (ARS v3.9.4 rules) + muriel.aiism (when available)\n`;
 
         if (flags.json) {
             console.log(JSON.stringify(results.length === 1 ? results[0] : results, null, 2));
         } else if (summary) {
             console.log(`\n═══ Science Agent: Prose Audit (summary) ═══\n`);
-            console.log(`  Source rules: muriel.aiism (rule table in muriel/aiism.py)\n`);
+            console.log(sourcesNote);
             console.log(formatSummary(results));
         } else {
             console.log(`\n═══ Science Agent: Prose Audit ═══\n`);
-            console.log(`  Source rules: muriel.aiism (rule table in muriel/aiism.py)\n`);
+            console.log(sourcesNote);
             for (const r of results) {
                 console.log(formatReport(r));
             }
