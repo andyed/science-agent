@@ -7,6 +7,7 @@
  * Usage:
  *   science-agent audit <dir> --bibtex=<path>    Audit citations against BibTeX
  *   science-agent arxiv [count] [--cat=cs.AI]     Audit recent arXiv papers
+ *   science-agent arxiv-search "query"            Search arXiv; surfaces published DOI to verify
  *   science-agent verify <doi>                    Verify a DOI against CrossRef
  *   science-agent search "title query"            Search CrossRef by title
  *
@@ -29,6 +30,9 @@ science-agent — Detect AI-confabulated academic citations
 Usage:
   science-agent audit <dir> --bibtex=<path>    Audit citations against BibTeX
   science-agent arxiv [count] [--cat=cs.AI]     Audit recent arXiv papers
+  science-agent arxiv-search "query"            Search arXiv by free text (or --id=2401.12345)
+    --max=10                                      Max results (cap 50)
+    --sort=relevance                              relevance | submittedDate | lastUpdatedDate
   science-agent verify <doi>                    Verify a DOI against CrossRef
   science-agent search "title query"            Search CrossRef by title
   science-agent notebook-audit <dir>            Audit [NB##:K##] claim references
@@ -176,6 +180,42 @@ async function main() {
         }
 
         if (result.stats.issuesFound > 0) process.exit(1);
+
+    } else if (command === 'arxiv-search') {
+        const query = positional.join(' ');
+        if (!query && !flags.id) {
+            console.error('Error: query or --id required. Usage: science-agent arxiv-search "query" [--max=10] [--sort=relevance]');
+            process.exit(1);
+        }
+
+        const { searchArxiv } = require('./src/arxiv');
+        if (!flags.json) {
+            console.log(`\n═══ Science Agent: arXiv Search ═══`);
+            console.log(flags.id ? `arXiv id(s): ${flags.id}\n` : `Query: "${query}"\n`);
+        }
+
+        const results = await searchArxiv(query, { max: flags.max, sort: flags.sort, id: flags.id });
+
+        if (flags.json) {
+            console.log(JSON.stringify(results, null, 2));
+            return;
+        }
+
+        if (results.length === 0) {
+            console.log('  No results found.\n');
+        } else {
+            for (const r of results) {
+                console.log(`── ${r.id}  ${r.primaryCategory ? `[${r.primaryCategory}]` : ''} ${r.published || ''}`);
+                console.log(`   ${r.title}`);
+                console.log(`   ${r.authors.slice(0, 4).join('; ')}${r.authors.length > 4 ? ' et al.' : ''}`);
+                if (r.doi) console.log(`   published DOI: ${r.doi}  → verify: science-agent verify ${r.doi}`);
+                if (r.journalRef) console.log(`   journal: ${r.journalRef}`);
+                console.log(`   ${r.pdfUrl}`);
+                console.log('');
+            }
+            const withDoi = results.filter(r => r.doi).length;
+            console.log(`${results.length} result${results.length === 1 ? '' : 's'} · ${withDoi} with a published DOI ready to verify\n`);
+        }
 
     } else if (command === 'verify') {
         const doi = positional[0];

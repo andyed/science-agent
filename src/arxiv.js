@@ -82,6 +82,59 @@ async function getRefsFromHTML(arxivId) {
   }
 }
 
+// Decode the handful of XML entities arXiv's Atom feed emits in titles/abstracts.
+function decodeEntities(s) {
+  if (!s) return s;
+  return s
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, h) => String.fromCodePoint(parseInt(h, 16)))
+    .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(parseInt(d, 10)));
+}
+
+// Search arXiv by free-text query and return structured metadata — including the
+// published DOI and journal_ref when arXiv has them. Those two fields are the
+// on-mission payoff: they let a preprint-only citation be resolved to a journal
+// DOI and CrossRef-verified (pipe `doi` into verifyDOI / `science-agent verify`).
+//
+// Clean-room Node reimplementation of the search_arxiv capability in DeepMind's
+// google-deepmind/science-skills (literature_search_arxiv, Apache-2.0). Built
+// against the public arXiv API (https://info.arxiv.org/help/api/), not their
+// Python — keeps this repo MIT and Python-free. arXiv API policy: max 1 request
+// every 3 seconds, so keep these calls single-shot.
+async function searchArxiv(query, options = {}) {
+  const max = Math.min(parseInt(options.max) || 10, 50);
+  const sortBy = options.sort || 'relevance'; // relevance | submittedDate | lastUpdatedDate
+  const parts = [];
+  if (options.id) parts.push(`id_list=${encodeURIComponent(options.id)}`);
+  else parts.push(`search_query=${encodeURIComponent(`all:${query}`)}`);
+  const url = `https://export.arxiv.org/api/query?${parts.join('&')}&sortBy=${sortBy}&sortOrder=descending&max_results=${max}`;
+
+  const xml = await fetchURL(url);
+  const entries = xml.split('<entry>').slice(1);
+  const papers = [];
+  for (const entry of entries) {
+    const rawId = entry.match(/<id>http:\/\/arxiv\.org\/abs\/([^<]+)<\/id>/)?.[1];
+    if (!rawId) continue;
+    const id = rawId.replace(/v\d+$/, '');
+    const title = decodeEntities(entry.match(/<title>([\s\S]*?)<\/title>/)?.[1]?.replace(/\s+/g, ' ').trim());
+    const summary = decodeEntities(entry.match(/<summary>([\s\S]*?)<\/summary>/)?.[1]?.replace(/\s+/g, ' ').trim());
+    const authors = [...entry.matchAll(/<name>([^<]+)<\/name>/g)].map(m => decodeEntities(m[1].trim()));
+    const published = entry.match(/<published>([^<]+)<\/published>/)?.[1]?.slice(0, 10) || null;
+    const pdfTag = entry.match(/<link[^>]*title="pdf"[^>]*>/)?.[0];
+    const pdfUrl = pdfTag?.match(/href="([^"]+)"/)?.[1] || `https://arxiv.org/pdf/${rawId}`;
+    const primaryCategory = entry.match(/<arxiv:primary_category[^>]*term="([^"]+)"/)?.[1] || null;
+    const categories = [...entry.matchAll(/<category[^>]*term="([^"]+)"/g)].map(m => m[1]);
+    const doi = entry.match(/<arxiv:doi[^>]*>([^<]+)<\/arxiv:doi>/)?.[1]?.trim() || null;
+    const journalRef = decodeEntities(entry.match(/<arxiv:journal_ref[^>]*>([\s\S]*?)<\/arxiv:journal_ref>/)?.[1]?.replace(/\s+/g, ' ').trim()) || null;
+    papers.push({ id, version: rawId, title, authors, summary, published, pdfUrl, primaryCategory, categories, doi, journalRef });
+  }
+  return papers;
+}
+
 async function auditArxiv(count, options = {}) {
   const category = options.category || 'cs.AI';
   const papers = await getRecentPapers(count, category);
@@ -186,4 +239,4 @@ async function auditArxiv(count, options = {}) {
   };
 }
 
-module.exports = { auditArxiv };
+module.exports = { auditArxiv, searchArxiv };
