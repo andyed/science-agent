@@ -18,6 +18,13 @@ npx github:andyed/science-agent verify 10.1038/nn.2889
 
 No install, no clone — runs straight from this repo.
 
+Want it on your `$PATH` instead of refetching each run? Install the CLI globally from GitHub (wires up the `science-agent` bin):
+
+```bash
+npm install -g github:andyed/science-agent
+science-agent audit ./docs --bibtex=./refs.bib
+```
+
 ## What it does
 
 ### Citation Verification (shipped)
@@ -106,7 +113,7 @@ Install the whole toolkit — agents, slash commands, CLI — in one step:
 /plugin install andyed/science-agent
 ```
 
-This pulls the repo, installs npm dependencies into the plugin data dir, and registers:
+This pulls the repo, installs npm dependencies into the plugin data dir (Node ≥18 required), and registers:
 
 - **Slash commands**: `/science-agent:audit`, `/science-agent:figure-audit`, `/science-agent:notebook-audit`, `/science-agent:verify`, `/science-agent:search`, `/science-agent:aggregate`, `/science-agent:arxiv`
 - **Sub-agents** (auto-invoked when relevant): `figure-audit`, `rigor-audit`
