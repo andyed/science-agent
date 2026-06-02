@@ -10,6 +10,7 @@
 - **Related work** — added google-deepmind/science-skills to the README comparison table (retrieval vs. verification framing).
 - **Docs: `prose-audit` plugin status corrected** — the README still said `prose-audit` was "not in the plugin yet" and required a Python/muriel install; it has shipped natively (rules in [`src/aiism-rules.json`](src/aiism-rules.json), engine in [`src/prose-audit.js`](src/prose-audit.js)) with muriel/Python as an optional pass. Reconciled the README plugin section and the marketplace.json description to advertise `/science-agent:prose-audit` (and `/science-agent:hypothesis-card`).
 - **TODO.md** — captured two follow-ups inspired by science-skills: a native-Node shared lib to unblock `prose-audit`, and a skill-creator meta-skill for the Phase 4 claim-audit.
+- **`--json` output is pure JSON across every command** — `arxiv`, `verify`, and `search` printed a human status line to stdout before the JSON early-return, and `aggregate`/`notebook-audit` printed an empty-dir help block before it, so piping `--json` through a parser broke. All now suppress human output under `--json` (status lines guarded, JSON return hoisted above the empty-dir branches), making stdout exactly one JSON document. (`arxiv-search` already did this.)
 
 ## 0.6.0 (2026-05-19)
 

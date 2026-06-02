@@ -134,8 +134,10 @@ async function main() {
         const category = flags.cat || 'cs.AI';
 
         const { auditArxiv } = require('./src/arxiv');
-        console.log(`\n═══ Science Agent: arXiv Audit ═══`);
-        console.log(`Checking references in the ${count} most recent ${category} papers\n`);
+        if (!flags.json) {
+            console.log(`\n═══ Science Agent: arXiv Audit ═══`);
+            console.log(`Checking references in the ${count} most recent ${category} papers\n`);
+        }
 
         const result = await auditArxiv(count, { category });
 
@@ -225,7 +227,7 @@ async function main() {
         }
 
         const { verifyDOI } = require('./src/crossref');
-        console.log(`Verifying DOI: ${doi}...`);
+        if (!flags.json) console.log(`Verifying DOI: ${doi}...`);
         const result = await verifyDOI(doi);
 
         if (flags.json) {
@@ -252,7 +254,7 @@ async function main() {
         }
 
         const { searchByTitle } = require('./src/crossref');
-        console.log(`Searching CrossRef: "${query}"...\n`);
+        if (!flags.json) console.log(`Searching CrossRef: "${query}"...\n`);
         const results = await searchByTitle(query);
 
         if (flags.json) {
@@ -296,6 +298,11 @@ async function main() {
         const { aggregate, formatMarkdown } = require('./src/aggregate');
         const result = aggregate(path.resolve(dir));
 
+        if (flags.json) {
+            console.log(JSON.stringify(result, null, 2));
+            return;
+        }
+
         // Graceful: if no notebooks with claims found, explain instead of erroring
         if (result.stats.notebooksWithClaims === 0) {
             console.log(`\n═══ Science Agent: Aggregate ═══\n`);
@@ -307,11 +314,6 @@ async function main() {
             console.log(`    - **K2**: Another finding\n`);
             console.log(`  See: https://github.com/andyed/science-agent/blob/main/docs/notebook-conventions.md\n`);
             process.exit(0);
-        }
-
-        if (flags.json) {
-            console.log(JSON.stringify(result, null, 2));
-            return;
         }
 
         const md = formatMarkdown(result);
@@ -347,6 +349,11 @@ async function main() {
             notebookDir: flags.notebooks ? path.resolve(flags.notebooks) : null,
         });
 
+        if (flags.json) {
+            console.log(JSON.stringify(result, null, 2));
+            return;
+        }
+
         // If no claim references found at all, explain what this command is for
         if (result.stats.totalRefs === 0 && result.issues.length === 0) {
             console.log(`\n═══ Science Agent: Notebook Claims Audit ═══\n`);
@@ -360,11 +367,6 @@ async function main() {
             console.log(`    4. Then: science-agent notebook-audit ./docs --aggregate=key-claims.md\n`);
             console.log(`  See: https://github.com/andyed/science-agent/blob/main/docs/notebook-conventions.md\n`);
             process.exit(0);
-        }
-
-        if (flags.json) {
-            console.log(JSON.stringify(result, null, 2));
-            return;
         }
 
         console.log(`\n═══ Science Agent: Notebook Claims Audit ═══\n`);
