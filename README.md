@@ -125,10 +125,10 @@ Install the whole toolkit — agents, slash commands, CLI — in one step:
 
 This pulls the repo, installs npm dependencies into the plugin data dir (Node ≥18 required), and registers:
 
-- **Slash commands**: `/science-agent:audit`, `/science-agent:figure-audit`, `/science-agent:notebook-audit`, `/science-agent:verify`, `/science-agent:search`, `/science-agent:aggregate`, `/science-agent:arxiv`, `/science-agent:arxiv-search`
+- **Slash commands**: `/science-agent:audit`, `/science-agent:figure-audit`, `/science-agent:notebook-audit`, `/science-agent:prose-audit`, `/science-agent:verify`, `/science-agent:search`, `/science-agent:aggregate`, `/science-agent:arxiv`, `/science-agent:arxiv-search`, `/science-agent:hypothesis-card`
 - **Sub-agents** (auto-invoked when relevant): `figure-audit`, `rigor-audit`
 
-`prose-audit` is **not** in the plugin yet — its rule table currently lives in [`muriel`](https://github.com/andyed/muriel) (Python) and would force a Python install on every plugin user. Available locally as `node cli.js prose-audit <file>` if you have `muriel` cloned. Native Node port tracked.
+`prose-audit` runs a **native Node engine** — its rule set lives in [`src/aiism-rules.json`](src/aiism-rules.json) (first-party threshold rules plus MIT-compatible ported rules) with detectors in [`src/prose-audit.js`](src/prose-audit.js), so it ships in the plugin with **no Python dependency**. An optional [`muriel`](https://github.com/andyed/muriel) (Python) pass adds extra rules when `python3` + `muriel` are present; pass `--no-muriel` to skip it, or `--no-native` to skip the built-in rules.
 
 A planned fourth agent — `claim-audit` — will cover semantic claim correctness (does the cited paper actually say this?). It slots into `agents/` when [Phase 4 of `PLAN.md`](PLAN.md#phase-4-claim-auditor-content-accuracy) ships.
 
