@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "science-agent",
-      "description": "Validates citations against CrossRef/BibTeX, audits figures, prose, notebooks, and rigor. Slash commands /audit /verify /search /figure-audit /notebook-audit /hypothesis-card /arxiv /aggregate plus rigor-audit and figure-audit sub-agents.",
+      "description": "Validates citations against CrossRef/BibTeX, audits figures, prose, notebooks, and rigor. Slash commands /audit /verify /search /figure-audit /notebook-audit /hypothesis-card /arxiv /arxiv-search /aggregate plus rigor-audit and figure-audit sub-agents.",
       "version": "0.6.0",
       "author": {
         "name": "Andy Edmonds"
