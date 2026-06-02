@@ -75,53 +75,12 @@ When prose cites a Key Claim:
 ```
 [NB14:K3]   — specific claim (notebook 14, claim K3)
 [NB14]      — the notebook generally
-[H03]       — the hypothesis card the claim was registered against (see below)
 ```
 
 This notation is designed to be:
 - **Greppable** — `grep -r '\[NB14:K3\]'` finds every citation
 - **Stable** — survives cell reordering, notebook renaming
 - **Machine-auditable** — science-agent can verify every reference resolves
-
-## Hypothesis Carry-Forward
-
-A `[NB##:K##]` row records *what was measured*. A `[H##]` card (see `hypothesis-card-spec.md`) records *what was pre-committed before the measurement*: the metric, the baseline, the pass threshold, the compute budget, and the leakage screen. The two notations are complements.
-
-### Linking K-claims to H-cards
-
-When a Key Claim was registered against a hypothesis card, add an `H` column:
-
-```markdown
-## Key Claims
-
-| ID | Claim | Value | H | Verified |
-|----|-------|-------|---|----------|
-| **K1** | Trials with usable data | 2,719 | — | 2026-04-09 |
-| **K2** | Position × LF/HF | ρ = −0.618, p = 0.0426 | [H01] | 2026-04-09 |
-| **K3** | Click-prediction AUC, M3 vs M1 | 0.731 vs 0.704 | [H03] | 2026-05-04 |
-```
-
-A dash (`—`) in the H column means the claim was descriptive — discovered, not pre-committed. Both kinds of claim are valid; the distinction is part of the audit trail.
-
-### Why this matters
-
-- **Discovery vs confirmation** is auditable. Readers can see which K-rows were predicted ahead of time and which were observed after the fact.
-- **Failed hypotheses are first-class.** A retired card with status `failed` and a corresponding K-row recording the null result is the cleanest way to publish a negative finding.
-- **Leakage screens carry into the paper.** When prose cites `[NB21:K3]`, the reviewer can walk back through `[H03]` to see the click-buffer Δ grid that was pre-committed — not "trust us, we checked."
-
-### Auto-pre-fix workflow
-
-The order of operations the substrate is designed to enforce:
-
-```
-1. /hypothesis-card "<falsifiable claim>"   →  hypotheses/H03_*.md (status: proposed)
-2. notebook tests the card                  →  H03 status: running
-3. notebook adds K-row, citing [H03]        →  Key Claims block
-4. update_key_claims.py aggregates          →  docs/notebook-key-claims.md
-5. paper cites [NB21:K3] AND [H03]          →  reader can trace forward and back
-```
-
-`science-agent notebook-audit` (existing) verifies step 5 resolves. A future audit pass will verify the H-card status moved to passed/failed and the Result block was filled in.
 
 ### Naming notebooks
 
