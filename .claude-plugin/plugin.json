@@ -1,6 +1,6 @@
 {
   "name": "science-agent",
-  "version": "0.2.0",
+  "version": "0.6.0",
   "description": "Citation, prose, figure, and rigor auditing for AI-assisted research drafts.",
   "author": {
     "name": "Andy Edmonds",
