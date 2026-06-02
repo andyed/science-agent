@@ -2,6 +2,13 @@
 
 # Changelog
 
+## Unreleased
+
+- **`arxiv-search` command** — search arXiv by free text or `--id`, returning structured metadata including the published `arxiv:doi` and `arxiv:journal_ref`. Surfaces a preprint's journal DOI ready to pipe into `verify` (the find→verify pattern). Clean-room Node reimplementation of the `literature_search_arxiv` capability in [google-deepmind/science-skills](https://github.com/google-deepmind/science-skills) (Apache-2.0) — built against the public arXiv API, no Python dependency, repo stays MIT. Adds slash command `/science-agent:arxiv-search`; `--json` output is clean (header suppressed) for chaining.
+- **skills.sh distribution** — added [`skills/science-agent/SKILL.md`](skills/science-agent/SKILL.md) so the toolkit installs into any skills.sh-compatible agent via `npx skills add andyed/science-agent`, alongside the existing Claude Code plugin path.
+- **Related work** — added google-deepmind/science-skills to the README comparison table (retrieval vs. verification framing).
+- **TODO.md** — captured two follow-ups inspired by science-skills: a native-Node shared lib to unblock `prose-audit`, and a skill-creator meta-skill for the Phase 4 claim-audit.
+
 ## 0.6.0 (2026-05-19)
 
 - **Added 4 sentence-fragment detectors** triggered by AllSERP paper cleanup (non-sentence-sentence patterns):

@@ -105,6 +105,16 @@ The pattern is the same everywhere: point at a directory of prose and a BibTeX f
 
 For deeper integration, see [`agent.md`](agent.md) (Claude Code agent) or [`docs/github-actions.md`](docs/github-actions.md) (CI/CD).
 
+### Install as an agent skill (skills.sh)
+
+For any agent that supports [skills.sh](https://skills.sh) — Claude Code, Cursor, Codex, and others — install the portable skill straight from GitHub:
+
+```bash
+npx skills add andyed/science-agent
+```
+
+This installs [`skills/science-agent/SKILL.md`](skills/science-agent/SKILL.md), which teaches the agent when and how to drive the CLI (`audit`, `verify`, `search`, `arxiv-search`, `notebook-audit`, `figure-audit`) plus the find→verify pattern. The CLI runs via `npx github:andyed/science-agent`, so there's nothing else to install.
+
 ### Claude Code plugin (recommended)
 
 Install the whole toolkit — agents, slash commands, CLI — in one step:
@@ -115,7 +125,7 @@ Install the whole toolkit — agents, slash commands, CLI — in one step:
 
 This pulls the repo, installs npm dependencies into the plugin data dir (Node ≥18 required), and registers:
 
-- **Slash commands**: `/science-agent:audit`, `/science-agent:figure-audit`, `/science-agent:notebook-audit`, `/science-agent:verify`, `/science-agent:search`, `/science-agent:aggregate`, `/science-agent:arxiv`
+- **Slash commands**: `/science-agent:audit`, `/science-agent:figure-audit`, `/science-agent:notebook-audit`, `/science-agent:verify`, `/science-agent:search`, `/science-agent:aggregate`, `/science-agent:arxiv`, `/science-agent:arxiv-search`
 - **Sub-agents** (auto-invoked when relevant): `figure-audit`, `rigor-audit`
 
 `prose-audit` is **not** in the plugin yet — its rule table currently lives in [`muriel`](https://github.com/andyed/muriel) (Python) and would force a Python install on every plugin user. Available locally as `node cli.js prose-audit <file>` if you have `muriel` cloned. Native Node port tracked.
@@ -217,6 +227,7 @@ See [FINDINGS.md](FINDINGS.md) for the complete audit with methodology, data, pa
 | [Context Rot](https://github.com/chroma-core/context-rot) | Measures general LLM degradation with context length | Methodology foundation for understanding why hallucination worsens under load |
 | [Claude Scholar](https://github.com/Galaxy-Dawn/claude-scholar) | Full research lifecycle config for Claude Code | Workflow orchestrator with prompt-based citation checking. Science-agent could serve as its verification backend via MCP |
 | [K-Dense scientific-agent-skills: citation-management](https://github.com/K-Dense-AI/scientific-agent-skills/blob/main/scientific-skills/citation-management/SKILL.md) | Discovery + formatting — Google Scholar / PubMed MeSH / CrossRef / arXiv / DataCite search, BibTeX deduplication, sorting, validation | Different emphasis, complementary surface. K-Dense covers *finding and formatting* references. Science-agent covers *verifying* them and catching cross-file drift in claims that cite them. MIT-licensed sibling worth running alongside |
+| [google-deepmind/science-skills](https://github.com/google-deepmind/science-skills) | 37 agent skills wrapping scientific databases — genomics (AlphaGenome, ClinVar, gnomAD), structural biology (AlphaFold, PDB, Foldseek, PyMOL), cheminformatics (ChEMBL, PubChem), and literature *search* (arXiv, OpenAlex, Europe PMC, PubMed). Built for Google Antigravity; Apache-2.0 + CC-BY-4.0 | Retrieval, not verification. DeepMind's skills *find* data and papers; science-agent *verifies* the citations and claims already written. Complementary — a retrieval agent can call `science-agent verify` as its check-step. Our `arxiv-search` reimplements their `literature_search_arxiv` query in Node (MIT, no Python dependency) and pipes the published DOI straight into `verify` |
 
 ![Go-go gadget peer review](assets/gogogadget-peer-review.png)
 
