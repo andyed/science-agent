@@ -8,7 +8,8 @@
   },
   "scripts": {
     "audit": "node cli.js audit",
-    "test": "node cli.js audit ./test-fixtures --bibtex=./test-fixtures/refs.bib"
+    "test": "node cli.js audit ./test-fixtures --bibtex=./test-fixtures/refs.bib",
+    "test:prose": "node tools/prose-eval.js"
   },
   "keywords": ["science", "citation", "academic", "confabulation", "ai", "verification", "bibtex", "crossref", "research"],
   "repository": {

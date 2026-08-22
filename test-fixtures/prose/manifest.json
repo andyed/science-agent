@@ -1,0 +1,113 @@
+{
+  "description": "Assertions for tools/prose-eval.js. Per-rule, not per-file: a fixture says nothing about rules it does not name.",
+  "cases": [
+    {
+      "file": "positive/copula-avoidance.md",
+      "must_fire": [
+        "copula-avoidance"
+      ],
+      "why": "serves as / stands as / boasts, all in the copula-dodging sense."
+    },
+    {
+      "file": "positive/significance-inflation.md",
+      "must_fire": [
+        "significance-inflation"
+      ],
+      "why": "testament to / underscores the importance / plays a crucial role / marks a pivotal moment."
+    },
+    {
+      "file": "positive/participial-tail.md",
+      "must_fire": [
+        "participial-significance-tail"
+      ],
+      "why": "highlighting / underscoring / showcasing tails that interpret rather than report."
+    },
+    {
+      "file": "positive/actorless-evidence.md",
+      "must_fire": [
+        "actorless-evidence"
+      ],
+      "why": "data tells us / numbers speak for themselves / conclusion emerges."
+    },
+    {
+      "file": "positive/weasel-attribution.md",
+      "must_fire": [
+        "weasel-attribution"
+      ],
+      "why": "Four authority claims, no citation anywhere in the file."
+    },
+    {
+      "file": "positive/weasel-attribution.tex",
+      "must_fire": [
+        "weasel-attribution"
+      ],
+      "why": "Same, in LaTeX. Guards the case where stripLatex substitution suppresses the rule outright: \\ref is present but no \\cite."
+    },
+    {
+      "file": "negative/cited-authority.tex",
+      "must_not_fire": [
+        "weasel-attribution"
+      ],
+      "why": "Every authority claim carries \\cite / \\citep / \\citet / \\citeauthor. Regression guard for the [CITE] substitution in stripLatex."
+    },
+    {
+      "file": "negative/cited-authority.md",
+      "must_not_fire": [
+        "weasel-attribution"
+      ],
+      "why": "Same claims in markdown across all three citation forms: [@key], [14], (Kim et al., 2014)."
+    },
+    {
+      "file": "negative/results-prose.md",
+      "must_not_fire": [
+        "participial-significance-tail",
+        "actorless-evidence"
+      ],
+      "why": "demonstrating / illustrating / reflecting tails report results; 'the results suggest' and 'the findings indicate' are standard hedging, not actorless claims."
+    },
+    {
+      "file": "negative/morphology.md",
+      "must_not_fire": [
+        "copula-avoidance"
+      ],
+      "why": "serves (with object), observers, reserve, servers, stood as, standard, outstanding. Word-boundary regression guard."
+    },
+    {
+      "file": "negative/late-citation.md",
+      "must_not_fire": [
+        "weasel-attribution"
+      ],
+      "why": "Citation lands two sentences later, inside the 200-character tolerance. Suppression is deliberate: a missing citation three sentences out is a copyedit pass, not a rigor failure."
+    },
+    {
+      "file": "positive/repeated-phrase.tex",
+      "must_fire": [
+        "repeat-load-bearing",
+        "repeat-structurally"
+      ],
+      "why": "Both kinds exceed max_count, and both must fire on .tex. Regression guard for the native repeated-phrase engine: before it existed these rules ran only through the optional Python pass, which is skipped for LaTeX, so the error-severity slogan rule never ran on a paper draft."
+    },
+    {
+      "file": "positive/proximity-cleft.tex",
+      "must_fire": [
+        "doubled-cleft"
+      ],
+      "why": "Two 'What X ... is Y' clefts inside 220 chars. Regression guard for the native proximity engine, same .tex gap."
+    },
+    {
+      "file": "negative/repeated-under-limit.md",
+      "must_not_fire": [
+        "repeat-load-bearing",
+        "repeat-structurally"
+      ],
+      "why": "One 'load-bearing' (max_count 1) and two 'structurally' (max_count 2). At the allowance, not over it. Guards the off-by-one."
+    },
+    {
+      "file": "negative/technical-regime.tex",
+      "must_not_fire": [
+        "phrase-regime"
+      ],
+      "why": "scotopic / photopic / linear / saturation / supra-threshold / ballistic regime are neutral domain vocabulary. Guards the suppress_pattern port from muriel.aiism RULE_SUPPRESS, which native previously lacked entirely on .tex."
+    }
+  ]
+}

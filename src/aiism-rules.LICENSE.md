@@ -8,7 +8,38 @@ The rule data in `aiism-rules.json` is distributed under the science-agent proje
 |---|---|---|---|
 | **First-party observation** | MIT (project license) | `em-dash-total`, `semicolon-density`, `binary-contrast`. Thresholds and structural detectors chosen by maintainer based on cleanup patterns in own drafts. | Attribution preserved in `source` field. |
 | **muriel** (project-specific tics) | MIT-compatible (parent project) | `artifact-*` (LLM tooling residue), `phrase-locus-of`, `phrase-substrate-licenses`, `phrase-doing-its-share`, `phrase-observational-register`, `phrase-names-the-same-observation`, `phrase-the-hope-is-that`, `phrase-looking-into-the-corners`, `phrase-leaky-cursor-aside`, `phrase-earn-their-keep`, `phrase-not-just-but`, `phrase-regime`, project-specific repeated rules (`load-bearing`, `structurally`, `materially`, `meaningfully`, `already-compound`), `doubled-cleft`, three `engine` declarations. | Attribution preserved in `source` field. |
+| **MIT skill corpus** | **MIT** (four independent MIT-licensed skills; see "MIT skill corpus" below) | `copula-avoidance`, `significance-inflation`, `participial-significance-tail`, `actorless-evidence`, and the phrase list inside `weasel-attribution`. | **Attribution required**: preserved in this file and in each rule's `source` field. No share-alike, no non-commercial restriction. |
 | **proselint** v3 | **BSD-3-Clause** (Copyright © 2014–2015 Jordan Suchow, Michael Pacer, Lara A. Ross; github.com/amperser/proselint) | `metadiscourse`, `professional-narcissism`, `hedging-phrases`, `apologizing-more-research`. Each rule's pattern and intent matches a corresponding check in `proselint/checks/misc/` or `proselint/checks/hedging.py`. | **Attribution required**: this LICENSE file preserves the proselint copyright. **No-endorsement**: the proselint author names may not be used to promote derivative products without their permission. |
+
+## MIT skill corpus
+
+The v6 rules restore coverage that the v2 and v3 purges removed, re-derived from
+sources that are all MIT and therefore commercial-use-clean. None of the removed
+CC-BY-NC or CC-BY-SA text was consulted or reinstated; the phrase sets were rebuilt
+from these four:
+
+| Skill | Repository | License |
+|---|---|---|
+| stop-slop | github.com/hardikpandya/stop-slop | MIT |
+| deslop | github.com/stephenturner/skills (`deslop/`) | MIT |
+| no-ai-slop | github.com/petergyang/no-ai-slop | MIT |
+| anti-slop | github.com/elithrar/dotfiles (`.agents/skills/anti-slop/`) | MIT |
+
+Where the four agree on a pattern, the rule is attributed to the corpus rather than
+to one skill, because the pattern is common property across them (all four
+independently flag copula avoidance, significance inflation, and participial
+significance tails).
+
+Two departures from the sources, both first-party decisions:
+
+- `participial-significance-tail` deliberately omits *demonstrating*, *illustrating*,
+  *showing*, *reflecting*, and *ensuring*, which the source skills include. Those
+  verbs carry real result content in scientific prose; firing on them costs more
+  precision than the rule is worth. Recorded in the rule's `notes`.
+- `weasel-attribution` adds citation-awareness, which no source skill has. The
+  phrase list is theirs; the suppression logic (paragraph-scoped citation lookahead,
+  plus the `[CITE]` substitution in `stripLatex`) is first-party, and exists because
+  an uncited authority claim is a rigor failure in a paper rather than a style tic.
 
 ## Practical guidance
 
@@ -38,6 +69,7 @@ Each rule entry includes a `source` field. Current values:
 
 - `"first-party observation (...)"` — MIT (science-agent's parent license)
 - `"muriel (project-specific; parent-project license)"` — unencumbered
+- `"MIT-licensed skill corpus (stop-slop, deslop, no-ai-slop, elithrar/anti-slop — see aiism-rules.LICENSE.md)"` — MIT
 
 ## History
 
@@ -45,6 +77,8 @@ Earlier drafts of this JSON included rules ported from two outside sources, both
 
 - **CC BY-NC 4.0** rules from academic-research-skills v3.9.4 (flagged-term lists, throat-clearing openers, synonym groups, plus colon-list-sequence and rule-of-three engine entries) — removed in JSON **v2** (CHANGELOG 0.3.0).
 - **CC-BY-SA-4.0** rules derived from Wikipedia "Signs of AI writing" and `ammil-industries/vale-signs-of-ai-writing` via muriel (significance-inflation phrases, prescriptive-narrator framing, throat-clearing temporal openers, anthropomorphized research verbs, sourceless-authority hedges, four cluster detectors) — removed in JSON **v3** (CHANGELOG 0.4.0).
+
+As of JSON **v6** (2026-08-22) the *coverage* those rules provided is back, rebuilt from the MIT skill corpus above rather than restored from the removed text.
 
 The detection engines for all removed rule kinds are retained in `prose-audit.js` (MIT). If first-party rule entries of those kinds are added in future (based on this project's own observations), the engines fire automatically.
 

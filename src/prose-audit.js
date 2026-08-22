@@ -111,9 +111,23 @@ function stripLatex(src) {
     s = s.replace(/\\\([\s\S]*?\\\)/g, blank);
     s = s.replace(/\$(?:\\.|[^$\\])*\$/g, blank);
 
-    // 4. Drop reference-type commands entirely (with arg).
-    const dropCommands = ['cite', 'citep', 'citet', 'citeauthor', 'citeyear',
-                          'ref', 'eqref', 'autoref', 'pageref', 'label',
+    // 4a. Citation commands → a length-preserving [CITE] marker.
+    //     Blanking these outright loses the only evidence that a claim is
+    //     sourced, which makes citation-aware rules (weasel-attribution)
+    //     fire on every properly-cited sentence in a .tex file. The shortest
+    //     possible form, \\cite{x}, is 8 chars, so [CITE] (6) always fits;
+    //     the remainder is padded so line AND column offsets are unchanged.
+    const citeCommands = ['citep', 'citet', 'citeauthor', 'citeyear', 'cite'];
+    for (const cmd of citeCommands) {
+        const re = new RegExp(`\\\\${cmd}\\*?(?:\\[[^\\]]*\\])?(?:\\{[^{}]*\\})+`, 'g');
+        s = s.replace(re, (m) => {
+            if (m.indexOf('\n') >= 0) return blank(m);   // multi-line: keep it simple
+            return '[CITE]' + ' '.repeat(Math.max(0, m.length - 6));
+        });
+    }
+
+    // 4b. Drop remaining reference-type commands entirely (with arg).
+    const dropCommands = ['ref', 'eqref', 'autoref', 'pageref', 'label',
                           'bibliography', 'bibliographystyle', 'input',
                           'include', 'includegraphics', 'url', 'path',
                           'index', 'nocite'];
@@ -310,13 +324,33 @@ function auditDocRateLimit(text, rule) {
     return findings;
 }
 
-/** Single-phrase rule — fires on every occurrence of `rule.pattern`. */
+/**
+ * Single-phrase rule — fires on every occurrence of `rule.pattern`, minus
+ * any match whose left context matches `rule.suppress_pattern`.
+ *
+ * Suppression is one-sided by design: the window runs from 40 chars before
+ * the match to the END of the match, and the suppress pattern is expected to
+ * be `$`-anchored, so the benign collocation must terminate at this token. A
+ * two-sided window would wrongly clear a real tell that merely sits near a
+ * benign one ("the regime's crackdown … the saturation regime"). Ported from
+ * muriel.aiism RULE_SUPPRESS so native and muriel agree on .md files.
+ */
 function auditSinglePhrase(text, rule) {
     const findings = [];
     const flags = (rule.flags || 'gi').includes('g') ? (rule.flags || 'gi') : ((rule.flags || 'i') + 'g');
     const re = new RegExp(rule.pattern, flags);
+    const suppress = rule.suppress_pattern
+        ? new RegExp(rule.suppress_pattern, 'i')
+        : null;
     let m;
     while ((m = re.exec(text)) !== null) {
+        if (suppress) {
+            const pre = text.slice(Math.max(0, m.index - 40), m.index + m[0].length);
+            if (suppress.test(pre)) {
+                if (re.lastIndex === m.index) re.lastIndex += 1;
+                continue;
+            }
+        }
         const [line, column] = offsetToLineCol(text, m.index);
         findings.push({
             line, column, severity: rule.severity,
@@ -559,6 +593,60 @@ function auditBinaryContrast(text, rule) {
 }
 
 
+/**
+ * Repeated-phrase rule — a phrase allowed up to `max_count` times. Once the
+ * document exceeds the allowance, EVERY occurrence is reported, not just the
+ * ones past the limit: you cannot choose which site keeps the phrase without
+ * seeing all of them. Mirrors muriel.aiism._audit_repeated_phrases.
+ */
+function auditRepeatedPhrase(text, rule) {
+    const findings = [];
+    const flags = (rule.flags || 'gi').includes('g') ? (rule.flags || 'gi') : ((rule.flags || 'i') + 'g');
+    const matches = [...text.matchAll(new RegExp(rule.pattern, flags))];
+    if (matches.length <= rule.max_count) return findings;
+    matches.forEach((m, i) => {
+        const [line, column] = offsetToLineCol(text, m.index);
+        findings.push({
+            line, column, severity: rule.severity,
+            rule: rule.id,
+            message: `${rule.message} (this is occurrence ${i + 1} of ${matches.length})`,
+            excerpt: excerpt(text, m.index),
+        });
+    });
+    return findings;
+}
+
+/**
+ * Proximity rule — a pattern that is a tell only when it recurs within
+ * `max_distance_chars`. One cleft is a rhetorical choice; two in adjacent
+ * sentences is a tic. Reports the earlier member of each pair once, so a run
+ * of three yields two findings rather than a combinatorial blowup. Mirrors
+ * muriel.aiism._audit_proximity_pairs.
+ */
+function auditProximityPairs(text, rule) {
+    const findings = [];
+    const matches = [...text.matchAll(new RegExp(rule.pattern, 'gm'))];
+    if (matches.length < 2) return findings;
+    const distance = rule.max_distance_chars || 220;
+    for (let i = 0; i < matches.length; i++) {
+        const end = matches[i].index + matches[i][0].length;
+        for (let j = i + 1; j < matches.length; j++) {
+            if (matches[j].index - end > distance) continue;
+            const [line, column] = offsetToLineCol(text, matches[i].index);
+            const [pairLine] = offsetToLineCol(text, matches[j].index);
+            findings.push({
+                line, column, severity: rule.severity,
+                rule: rule.id,
+                message: `${rule.message} (paired with line ${pairLine})`,
+                excerpt: excerpt(text, matches[i].index),
+            });
+            break;
+        }
+    }
+    return findings;
+}
+
+
 // Dispatch table: rule.kind → engine function. Engine-specific rules use
 // rule.id as the dispatch key since their detectors aren't data-driven.
 const ENGINE_BY_KIND = {
@@ -569,6 +657,8 @@ const ENGINE_BY_KIND = {
     'synonym-group':          auditSynonymCycling,
     'single-phrase':          auditSinglePhrase,
     'hard-artifact':          auditHardArtifact,
+    'repeated-phrase':        auditRepeatedPhrase,
+    'proximity':              auditProximityPairs,
 };
 const ENGINE_BY_ID = {
     'colon-list-sequence':    auditColonListSequences,
@@ -704,6 +794,23 @@ function auditProse(filePath, options = {}) {
             allFindings.push({ ...f, source: 'native' });
         }
     }
+
+    // Deduplicate across sources. muriel and the native table share 26 rule
+    // ids (8 hard-artifact, 12 single-phrase, 5 repeated-phrase, 1 proximity),
+    // so before this every shared rule reported twice on .md input whenever
+    // muriel was installed — inflating every count in the summary and the
+    // --summary table. Native wins: it is the canonical rule source, it runs
+    // on .tex where muriel does not, and it honours the JSON severity.
+    const seen = new Set();
+    const deduped = [];
+    for (const f of [...allFindings.filter(f => f.source === 'native'),
+                     ...allFindings.filter(f => f.source !== 'native')]) {
+        const key = `${f.rule}@${f.line}:${f.column}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        deduped.push(f);
+    }
+    allFindings = deduped;
 
     // Re-sort and tally.
     allFindings.sort((a, b) =>

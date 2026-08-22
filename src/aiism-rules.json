@@ -1,11 +1,11 @@
 {
   "$schema": "./aiism-rules.LICENSE.md",
-  "version": 5,
+  "version": 6,
   "description": "Canonical AI-tell rule table for prose-audit. Loaded by science-agent/prose-audit.js. Engine-specific rules (custom traversal) are declared here for discoverability; their detectors live in code.",
   "owners": [
     "science-agent (canonical) — github.com/andyed/science-agent"
   ],
-  "notes": "v5 (2026-05-19): added 3 fragment-detection rules (fragment-discourse-marker, fragment-participial, fragment-relative-clause) addressing non-sentence-sentence patterns identified during AllSERP paper cleanup. v4 added 4 proselint-derived BSD-3-Clause rules. v3 removed CC-BY-SA-4.0; v2 removed CC BY-NC 4.0.",
+  "notes": "v6 (2026-08-22): added 5 rules restoring coverage removed by the v2/v3 licence purges, re-derived from MIT-licensed sources — copula-avoidance, significance-inflation, participial-significance-tail, actorless-evidence (actorless/anthropomorphic claims) and weasel-attribution (uncited authority claims, citation-aware). v5 (2026-05-19): added 3 fragment-detection rules (fragment-discourse-marker, fragment-participial, fragment-relative-clause) addressing non-sentence-sentence patterns identified during AllSERP paper cleanup. v4 added 4 proselint-derived BSD-3-Clause rules. v3 removed CC-BY-SA-4.0; v2 removed CC BY-NC 4.0.",
   "rules": [
     {
       "id": "em-dash-total",
@@ -193,7 +193,9 @@
       "severity": "warn",
       "pattern": "\\bregime[s]?\\b",
       "message": "'Regime' carries political connotations in current usage; for technical contexts prefer 'phase', 'mode', or 'state'.",
-      "source": "muriel (project-specific; parent-project license)"
+      "source": "muriel (project-specific; parent-project license)",
+      "suppress_pattern": "\\b(?:asymptotic|linear|non-?linear|saturat\\w+|threshold|supra-?threshold|sub-?threshold|scotopic|photopic|mesopic|foveal|parafoveal|peripheral|ballistic|diffusiv\\w+|perturbativ\\w+|viscous|inertial|turbulent|laminar|hydrodynamic|kinetic|thermodynamic|quantum|classical|relativistic|steady-?state|transient|scaling|light|dark|contrast|luminance|noise|signal|dose|energy|temperature|density|velocity|frequency|intensity|coupling|stimulus|response)[-\\s]+regimes?$",
+      "notes": "Suppressed in technical collocations (asymptotic / linear / scotopic / saturation regime), which are neutral vocabulary in physics, applied maths and vision science. Only the political sense is a tell. Ported from muriel.aiism RULE_SUPPRESS: without it the native engine fired on domain terms in .tex, where muriel never runs to suppress them."
     },
     {
       "id": "repeat-load-bearing",
@@ -351,6 +353,48 @@
       "message": "Standalone discourse-adverb as 'sentence' (e.g. 'Importantly.' / 'Notably.'). Attach to the following sentence: 'Importantly, X is Y.'",
       "source": "first-party observation (AllSERP cleanup)",
       "flags": "g"
+    },
+    {
+      "id": "copula-avoidance",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\b(?:serves?|served|serving)\\s+as\\b|\\bstands?\\s+as\\b|\\bboast(?:s|ing|ed)?\\b",
+      "message": "Copula avoidance. 'is' or 'has' is usually the clearer verb. Keep only where the thing literally performs the function named (a component that serves a request).",
+      "source": "MIT-licensed skill corpus (stop-slop, deslop, no-ai-slop, elithrar/anti-slop — see aiism-rules.LICENSE.md)"
+    },
+    {
+      "id": "significance-inflation",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\b(?:is|as|remains?|stand(?:s|ing)?\\s+as)\\s+a\\s+testament\\s+to\\b|\\bunderscor(?:es?|ing|ed)\\s+the\\s+(?:importance|significance|need|value|role)\\b|\\bhighlight(?:s|ing|ed)?\\s+the\\s+(?:importance|significance|need|value)\\b|\\bmark(?:s|ing|ed)?\\s+a\\s+(?:pivotal|watershed|defining|turning)\\s+(?:moment|point)\\b|\\bplay(?:s|ing|ed)?\\s+a\\s+(?:vital|crucial|pivotal|key|central)\\s+role\\b|\\b(?:solidif(?:ies|ying|ied)|cement(?:s|ing|ed)?)\\s+(?:its|their|the)\\b",
+      "message": "Significance inflation. Asserts that something matters instead of showing the consequence. State the specific result and let the reader weigh it.",
+      "source": "MIT-licensed skill corpus (stop-slop, deslop, no-ai-slop, elithrar/anti-slop — see aiism-rules.LICENSE.md)"
+    },
+    {
+      "id": "participial-significance-tail",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": ",\\s+(?:highlighting|underscoring|emphasizing|showcasing|signal(?:l)?ing|cementing|solidifying|reinforcing|exemplifying|epitomizing)\\b",
+      "message": "Participial tail asserting significance. The clause adds interpretation, not evidence. Cut it, or replace with the concrete consequence.",
+      "notes": "Deliberately excludes demonstrating / illustrating / showing / reflecting / ensuring: those carry real result content in scientific prose and firing on them costs more precision than the rule is worth.",
+      "source": "MIT-licensed skill corpus (stop-slop, deslop, no-ai-slop, elithrar/anti-slop — see aiism-rules.LICENSE.md)"
+    },
+    {
+      "id": "actorless-evidence",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\bthe\\s+(?:data|numbers|results|findings|evidence)\\s+(?:tells?\\s+us|speaks?\\s+for\\s+(?:itself|themselves))\\b|\\bthe\\s+(?:data|numbers)\\s+tells?\\b|\\bthe\\s+(?:market|system|process)\\s+rewards\\b|\\bthe\\s+(?:decision|consensus|conclusion)\\s+emerge[sd]\\b",
+      "message": "Actorless claim. Data does not tell and decisions do not emerge; a person read something and concluded something. Name the analysis or the author.",
+      "source": "MIT-licensed skill corpus (stop-slop, deslop, no-ai-slop, elithrar/anti-slop — see aiism-rules.LICENSE.md)"
+    },
+    {
+      "id": "weasel-attribution",
+      "kind": "single-phrase",
+      "severity": "error",
+      "pattern": "\\b(?:studies\\s+(?:show|suggest|indicate)|research\\s+(?:shows|suggests|indicates)|experts\\s+(?:agree|say|believe|argue|note)|(?:it\\s+is|it's)\\s+widely\\s+(?:believed|regarded|accepted|acknowledged)|(?:many|some|most)\\s+(?:researchers|scholars|authors|practitioners|studies)\\s+(?:argue|believe|claim|note|suggest|show)|industry\\s+reports\\s+suggest|prior\\s+work\\s+(?:suggests|shows|indicates)|the\\s+literature\\s+(?:suggests|shows|indicates))\\b(?!(?:(?!\\n[ \\t]*\\n)[\\s\\S]){0,400}?(?:\\[CITE\\]|\\[@|\\[\\d{1,3}(?:\\s*[,–-]\\s*\\d{1,3})*\\]|\\((?:e\\.g\\.,?\\s*)?[A-Z][A-Za-z'’-]+(?:\\s+(?:et\\s+al\\.?|and|&)\\s*[A-Za-z'’-]*)?,?\\s+\\d{4}))",
+      "message": "Authority claim with no citation within 200 characters. Name the source or cut the sentence. A reviewer reads this as either unsupported or invented.",
+      "notes": "Citation-aware: suppressed when a citation marker follows within the same paragraph (tempered scan stops at a blank line; hard cap 400 chars). Recognises [CITE] (LaTeX \\cite, substituted by stripLatex), pandoc [@key], numeric [12], and (Author, 2020) / (Author et al., 2020). Paragraph scope beats a raw character window: a claim cited two sentences later is cited, and a claim whose paragraph ends uncited is not.",
+      "source": "first-party observation (rigor gap: citation-audit only validates citations that exist; nothing caught an uncited authority claim) + phrase list from MIT-licensed skill corpus (stop-slop, deslop, no-ai-slop, elithrar/anti-slop — see aiism-rules.LICENSE.md)"
     }
   ]
 }
