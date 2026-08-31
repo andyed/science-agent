@@ -1,0 +1,56 @@
+{
+  "description": "Assertions for tools/notebook-eval.js. Two-sided, like the prose corpus: must_fire proves the auditor still catches a defect, must_not_fire proves it has not become so permissive that it waves everything through. must_resolve is the third axis this tool needs — proof it can still SEE a reference, since its historical failure was parsing nothing and reporting a clean run.",
+  "cases": [
+    {
+      "name": "current-notation",
+      "why": "Regime tags, rank-type tags, and parallel ID namespaces (K-bbox-3, K-leak-7a, K27.3) are what consumers actually write. Until 2026-08-31 the pattern was K\\d+ anchored at '[NB', so all of these were skipped in silence and the audit reported clean.",
+      "dir": "prose-current",
+      "aggregate": "aggregates/current.md",
+      "min_refs": 6,
+      "min_claims_in_aggregate": 8,
+      "must_resolve": [
+        "NB11.5:K20",
+        "NB21:K3",
+        "NB22:K3",
+        "NB21:K-bbox-3",
+        "NB22:K-leak-7a",
+        "NB26:K27.3"
+      ],
+      "must_not_fire": [
+        "missing_claim",
+        "missing_notebook",
+        "no_refs_parsed",
+        "aggregate_parsed_empty"
+      ]
+    },
+    {
+      "name": "unparseable-aggregate",
+      "why": "An aggregate whose headings are the wrong level parses to zero claims. That must be an error, not a run in which every reference is silently unvalidated.",
+      "dir": "prose-current",
+      "aggregate": "aggregates/broken.md",
+      "must_fire": ["aggregate_parsed_empty"]
+    },
+    {
+      "name": "claims-but-no-refs",
+      "why": "A populated aggregate and zero parsed references means the reference pattern failed, not that the prose is clean. This is the exact shape of the 2026-04-to-08 silent failure.",
+      "dir": "prose-none",
+      "aggregate": "aggregates/current.md",
+      "must_fire": ["no_refs_parsed"]
+    },
+    {
+      "name": "stale-ref-still-caught",
+      "why": "Guards the other direction: widening the K-ID grammar must not make the matcher so permissive that an unresolvable claim passes.",
+      "dir": "prose-missing",
+      "aggregate": "aggregates/current.md",
+      "must_fire": ["missing_claim"]
+    },
+    {
+      "name": "notebook-block-defects",
+      "why": "A Key Claims block holding a stdout fragment renders as present and parses to zero rows; it used to display a checkmark. Two notebook files under one label make every reference to that label ambiguous and merge their claims in the aggregate.",
+      "dir": "prose-notebooks",
+      "aggregate": "aggregates/current.md",
+      "notebooks": "notebooks",
+      "must_fire": ["empty_key_claims_block", "ambiguous_notebook_label"]
+    }
+  ]
+}

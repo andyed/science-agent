@@ -13,8 +13,29 @@ const path = require('path');
  *   4. Flags anti-patterns (hardcoded values, missing Key Claims blocks)
  */
 
-// Pattern: [NB13:K5] or [NB14:K3] or [NB11.5:K20]
-const NB_REF_PATTERN = /\[NB(\d+(?:\.\d+)?):K(\d+)\]/g;
+// One definition of the claim-ID grammar. It used to be written three times (ref
+// pattern, aggregate row, notebook row scan) and all three said `K\d+`, so parallel
+// ID namespaces — K-bbox-3, K-leak-7a, K-typed-12 — matched nowhere and were skipped
+// in silence. Consumers mint those namespaces whenever a cascade supersedes a claim
+// without renumbering it (see attentional-foraging CLAUDE.md), so they are the norm,
+// not an edge case. Must start with K and end alphanumeric; dots, hyphens and
+// underscores allowed between.
+const K_ID = String.raw`K[A-Za-z0-9._-]*[A-Za-z0-9]`;
+
+// Pattern: [NB13:K5], [NB11.5:K20], [NB21:K-bbox-3], and the tagged forms consumers
+// actually write — [LAB, NB22:K3] or [LAB, AdSERP, organic, NB21:K-bbox-3]. The
+// optional leading group is the regime / rank-type tag list; it is captured so a
+// caller can report it, and deliberately cannot span [ or ].
+const NB_REF_PATTERN = new RegExp(
+    String.raw`\[(?:([^\[\]]*?),\s*)?NB(\d+(?:\.\d+)?):(${K_ID})\]`, 'g');
+
+// Aggregate table row: | **K-bbox-1** | ... |  — tolerates a trailing retirement
+// note in the ID cell (`**K11** (retired 2026-05-01: ...)`), which the convention
+// spec calls for.
+const AGG_ROW_ID_PATTERN = new RegExp(String.raw`^\*{0,2}(${K_ID})\*{0,2}(?:\s|$)`);
+
+// Same row shape, scanned inside a notebook's Key Claims markdown cell.
+const NB_ROW_SCAN_PATTERN = new RegExp(String.raw`\|\s*\*{0,2}${K_ID}\*{0,2}\s*\|`, 'g');
 
 // Key Claims block marker (matches attentional-foraging convention)
 const KEY_CLAIMS_MARKER = '## Key Claims';
@@ -35,8 +56,9 @@ function extractClaimRefs(text, filepath) {
         const line = before.split('\n').length;
         refs.push({
             raw: m[0],
-            notebook: `NB${m[1]}`,
-            claimId: `K${m[2]}`,
+            tags: m[1] ? m[1].split(',').map(t => t.trim()).filter(Boolean) : [],
+            notebook: `NB${m[2]}`,
+            claimId: m[3],
             file: filepath,
             line,
         });
@@ -60,15 +82,18 @@ function parseAggregate(aggregatePath) {
         const nbMatch = line.match(/^##\s+(NB\d+(?:\.\d+)?)[:\s]/);
         if (nbMatch) {
             currentNB = nbMatch[1];
-            notebooks.set(currentNB, new Map());
+            // Merge, never replace: two notebook files can map to one label
+            // (18_learning_curve + 18_ripa2_vs_lfhf both → NB18), and a `set` here
+            // silently discarded the first section's claims.
+            if (!notebooks.has(currentNB)) notebooks.set(currentNB, new Map());
             continue;
         }
 
-        // Detect claim row: | **K3** | ... | ... | or | K3 | ... |
+        // Detect claim row: | **K3** | ... | ... | or | K-bbox-1 | ... |
         if (currentNB && line.startsWith('|')) {
             const cells = line.split('|').map(c => c.trim()).filter(Boolean);
             if (cells.length >= 2) {
-                const idMatch = cells[0].match(/^\*{0,2}(K\d+)\*{0,2}$/);
+                const idMatch = cells[0].match(AGG_ROW_ID_PATTERN);
                 if (idMatch) {
                     notebooks.get(currentNB).set(idMatch[1], {
                         id: idMatch[1],
@@ -95,8 +120,10 @@ function checkNotebookForKeyClaims(notebookPath) {
                 if (source.includes(KEY_CLAIMS_MARKER)) {
                     // Extract verified date
                     const dateMatch = source.match(VERIFIED_DATE_PATTERN);
-                    // Count K-IDs (may be plain K1 or bold **K1**)
-                    const kIds = source.match(/\|\s*\*{0,2}K\d+\*{0,2}\s*\|/g) || [];
+                    // Count K-IDs (may be plain K1, bold **K1**, or a parallel
+                    // namespace like **K-bbox-1**)
+                    NB_ROW_SCAN_PATTERN.lastIndex = 0;
+                    const kIds = source.match(NB_ROW_SCAN_PATTERN) || [];
                     return {
                         hasBlock: true,
                         verifiedDate: dateMatch ? dateMatch[1] : null,
@@ -127,6 +154,31 @@ function auditNotebookClaims(dir, options = {}) {
 
     // Load aggregate if available
     const aggregate = aggregatePath ? parseAggregate(aggregatePath) : null;
+
+    // Zero-parse guards. Every silent failure this tool has had took the same shape:
+    // it parsed nothing and reported a clean run. "Nothing found" and "I could not
+    // see" must not look alike, so a parse that yields nothing is an error.
+    let claimsInAggregate = 0;
+    if (aggregatePath) {
+        if (!aggregate) {
+            issues.push({
+                severity: 'error',
+                type: 'aggregate_not_found',
+                file: aggregatePath,
+                message: `Aggregate file not found: ${aggregatePath} — no reference could be validated`,
+            });
+        } else {
+            for (const claims of aggregate.values()) claimsInAggregate += claims.size;
+            if (claimsInAggregate === 0) {
+                issues.push({
+                    severity: 'error',
+                    type: 'aggregate_parsed_empty',
+                    file: aggregatePath,
+                    message: `Aggregate parsed to 0 claims — headings must be "## NB##: ..." and rows "| **K1** | ...". Every reference below is unvalidated.`,
+                });
+            }
+        }
+    }
 
     // Walk directory for prose references
     function walk(dirPath) {
@@ -190,21 +242,47 @@ function auditNotebookClaims(dir, options = {}) {
 
     walk(dir);
 
+    // Claims exist to be cited; finding none means the ref pattern failed to see
+    // them, not that the prose is clean.
+    if (claimsInAggregate > 0 && allRefs.length === 0) {
+        issues.push({
+            severity: 'error',
+            type: 'no_refs_parsed',
+            file: path.relative(process.cwd(), dir) || dir,
+            message: `Aggregate holds ${claimsInAggregate} claims but 0 references parsed from ${dir} — expected [NB##:K##], optionally tagged as [LAB, AdSERP, organic, NB##:K##]`,
+        });
+    }
+
     // Check notebooks for Key Claims blocks if notebook dir provided
     const notebookStatus = [];
     if (notebookDir && fs.existsSync(notebookDir)) {
         const nbFiles = fs.readdirSync(notebookDir)
             .filter(f => f.endsWith('.ipynb') && /^\d+/.test(f));
 
+        const labelToFiles = new Map();
+
         for (const nbFile of nbFiles) {
             const full = path.join(notebookDir, nbFile);
             const status = checkNotebookForKeyClaims(full);
             notebookStatus.push({ file: nbFile, ...status });
 
+            // A block that parsed to zero rows is the empty-success case again: it
+            // renders as a checkmark while carrying no verifiable claim.
+            if (status.hasBlock && status.claimCount === 0) {
+                issues.push({
+                    severity: 'warn',
+                    type: 'empty_key_claims_block',
+                    file: nbFile,
+                    message: `${nbFile} has a Key Claims block that parsed to 0 rows — check for stdout fragments or placeholders in the value column`,
+                });
+            }
+
             // Flag notebooks referenced in prose but missing Key Claims
             const nbLabel = nbFile.match(/^(\d+(?:_\d+)?)/);
             if (nbLabel) {
                 const label = `NB${nbLabel[1].replace('_', '.')}`;
+                if (!labelToFiles.has(label)) labelToFiles.set(label, []);
+                labelToFiles.get(label).push(nbFile);
                 const isReferenced = allRefs.some(r => r.notebook === label);
                 if (isReferenced && !status.hasBlock) {
                     issues.push({
@@ -214,6 +292,19 @@ function auditNotebookClaims(dir, options = {}) {
                         message: `${label} is cited in prose but has no Key Claims block`,
                     });
                 }
+            }
+        }
+
+        // Two files under one label make every [NB##:K##] citing it ambiguous, and
+        // the aggregate merges their claims into one section.
+        for (const [label, files] of labelToFiles) {
+            if (files.length > 1 && allRefs.some(r => r.notebook === label)) {
+                issues.push({
+                    severity: 'warn',
+                    type: 'ambiguous_notebook_label',
+                    file: files.join(', '),
+                    message: `${label} maps to ${files.length} notebooks (${files.join(', ')}) — references to it cannot be resolved to one source`,
+                });
             }
         }
     }
@@ -228,6 +319,7 @@ function auditNotebookClaims(dir, options = {}) {
         notebookStatus,
         stats: {
             totalRefs: allRefs.length,
+            claimsInAggregate,
             uniqueNotebooks: uniqueNBs.size,
             uniqueClaims: uniqueClaims.size,
             issueCount: issues.length,

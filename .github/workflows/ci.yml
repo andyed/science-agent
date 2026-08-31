@@ -1,0 +1,38 @@
+name: ci
+
+# science-agent had no CI until 2026-08-31. In that window the notebook-audit
+# claim grammar drifted away from every repo consuming it — K-bbox-*/K-leak-*
+# rows and regime-tagged references stopped matching, and because a non-match is
+# skipped rather than reported, the audits kept passing on nothing. The two-sided
+# fixture corpora are the guard; this workflow is what makes them mandatory.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm ci --omit=dev || npm install --omit=dev
+      - name: citation audit smoke
+        run: npm run test:citations
+      - name: prose rule corpus (must_fire / must_not_fire)
+        run: npm run test:prose
+      - name: notebook claim grammar (must_resolve / must_fire / floors)
+        run: npm run test:notebook
+      - name: manifest version matches package.json
+        run: |
+          pkg=$(node -p "require('./package.json').version")
+          plug=$(node -p "require('./.claude-plugin/plugin.json').version")
+          mkt=$(node -p "require('./.claude-plugin/marketplace.json').plugins[0].version || ''")
+          echo "package.json=$pkg plugin.json=$plug marketplace.json=$mkt"
+          [ "$pkg" = "$plug" ] || { echo "::error::plugin.json version $plug != package.json $pkg"; exit 1; }
+          if [ -n "$mkt" ] && [ "$mkt" != "$pkg" ]; then
+            echo "::error::marketplace.json version $mkt != package.json $pkg"; exit 1
+          fi

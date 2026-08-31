@@ -57,9 +57,23 @@ If you're unsure, leave it out. You can always add K-IDs later (append; never re
 | **K1** | [short description] | [value from cell output] | [YYYY-MM-DD] |
 ```
 
-- **ID column:** `K1`, `K2`, ... (optionally bold: `**K1**`). Never renumber. Retired claims stay in the table marked `(retired YYYY-MM-DD: reason)`.
+- **ID column:** `K1`, `K2`, ... (optionally bold: `**K1**`). Never renumber. Retired claims stay in the table marked `(retired YYYY-MM-DD: reason)` — put that marker **after** the ID so the ID itself stays a clean token (`| **K11** (retired 2026-05-01: replaced by K-bbox-3) |`).
 - **Claim column:** One-line description. Be specific enough to grep for.
-- **Value column:** Direct transcription of executed cell output. Never hand-type or round.
+- **Value column:** Direct transcription of executed cell output. Never hand-type or round. "Transcription" means the *value*, not the surrounding console text — see the stdout-fragment anti-pattern below.
+
+#### Parallel ID namespaces
+
+When a methodology change supersedes a batch of claims, the retire-and-append rule
+would burn a long run of numeric IDs and lose the grouping. Consumers instead mint a
+namespace: `K-bbox-3`, `K-leak-7a`, `K-typed-12`, alongside the legacy `K3`. Decimal
+IDs (`K27.3`) are used for sub-claims of one experiment.
+
+The auditor accepts any ID matching `K` + alphanumerics, dots, hyphens or
+underscores, ending alphanumeric. This is a contract, not a suggestion: the parser
+read `K\d+` until 2026-08-31, so every namespaced row was skipped in silence and
+audits passed on a fraction of the table. If you widen the grammar further, widen
+`K_ID` in `src/notebook-audit.js` and add a fixture to `test-fixtures/notebook/`
+in the same change.
 - **Verified column:** Date you last confirmed the value matches current cell output.
 
 ### Rules
@@ -76,6 +90,28 @@ When prose cites a Key Claim:
 [NB14:K3]   — specific claim (notebook 14, claim K3)
 [NB14]      — the notebook generally
 ```
+
+A project may prefix the reference with its own qualifier tags — regime, dataset,
+attribution flavor — as long as they are comma-separated and the `NB##:K##` token
+comes last:
+
+```
+[LAB, NB22:K3]                          — regime-tagged
+[LAB, AdSERP, organic, NB21:K-bbox-3]   — regime + dataset + rank-type
+```
+
+The auditor reads the tags as an opaque list and validates the claim reference. Tags
+carry project-specific meaning the auditor does not interpret; define them in your
+own repo's conventions (e.g. `attentional-foraging/CLAUDE.md` defines LAB/WILD and
+the three attribution flavors). References that are *only* tags, such as
+`[WILD, attcur]`, are not claim references and are ignored.
+
+### Naming notebooks
+
+**One notebook file per NB label.** Two files sharing a numeric prefix
+(`18_learning_curve.ipynb` and `18_ripa2_vs_lfhf.ipynb` both → `NB18`) make every
+`[NB18:K##]` citation ambiguous and merge their claims into one aggregate section.
+The auditor warns; the fix is to renumber one file, not to rely on context.
 
 This notation is designed to be:
 - **Greppable** — `grep -r '\[NB14:K3\]'` finds every citation
@@ -214,3 +250,10 @@ science-agent notebook-audit ./docs --aggregate=./docs/notebook-key-claims.md --
 | Claims in CHANGELOG/README with no K-ID | Unauditable | Add to notebook Key Claims first, then cite |
 | Renumbering K-IDs | Breaks all citations | Retire old IDs, append new ones |
 | Order-of-magnitude typos | "17×" when data says "1.7×" | Always copy-paste from output |
+| **Stdout fragments as values** | A multi-line console capture pasted into the Value column reads as a transcription but contains no citable number, and the row parses to nothing. Rule 1 ("copy-paste from cell output") is about the *value*, not the console text around it. | Transcribe the single value. If the notebook has not been re-executed against current data, write an explicit `[<flavor>, pending re-run]` marker instead. Never leave a fragment, never invent a number. |
+| **`*(see executed cell output)*` placeholders** | Same failure, shorter: a row that looks filled and holds nothing. | Same fix — a real value or an explicit pending marker. |
+
+`science-agent notebook-audit --notebooks=<dir>` flags a Key Claims block that
+parses to zero rows (`empty_key_claims_block`), which is how both of the above
+present. A block that renders as present while carrying no verifiable claim used to
+display a checkmark.
