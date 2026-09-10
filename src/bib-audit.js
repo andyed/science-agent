@@ -103,6 +103,9 @@ function compareAuthors(claimedAuthors, actualAuthors) {
         claimed,
         actual,
         partial: wildcard,
+        // No author field at all is a different condition from author drift:
+        // the entry cannot disagree with Crossref about a list it never made.
+        claimedEmpty: claimed.length === 0,
     };
 }
 
@@ -275,12 +278,14 @@ async function auditBibTeX(bibtexPath, options = {}) {
         const yearMatch = !entry.year || actualYears.length === 0 || actualYears.includes(Number(entry.year));
         const volumeMatch = !entry.volume || !actual.volume || normalizeText(entry.volume) === normalizeText(actual.volume);
         const pagesMatch = comparePages(entry.pages, actual.pages);
+        const authorsUnknown = authors.claimedEmpty && authors.actual.length > 0;
         const comparison = {
             titleMatch: title.match,
             titleExact: title.exact,
             titleCrossrefPrefix: title.crossrefPrefix,
             titleSimilarity: title.similarity,
             authorsMatch: authors.match,
+            authorsUnknown,
             yearMatch,
             volumeMatch,
             pagesMatch,
@@ -307,7 +312,19 @@ async function auditBibTeX(bibtexPath, options = {}) {
                     actual,
                 ));
             }
-            if (!authors.match) {
+            if (authorsUnknown) {
+                // Standards, datasets, org-authored reports and many @misc
+                // entries carry no author field. That is a completeness gap to
+                // fill from Crossref, not evidence that the DOI is wrong, so it
+                // must not fail a CI audit the way author drift does.
+                issues.push(issue(
+                    entry,
+                    'missing_authors',
+                    'warn',
+                    `BibTeX entry has no author field; Crossref lists ${(actual.authors || []).join('; ')}`,
+                    actual,
+                ));
+            } else if (!authors.match) {
                 issues.push(issue(
                     entry,
                     'author_mismatch',
@@ -345,7 +362,7 @@ async function auditBibTeX(bibtexPath, options = {}) {
             ));
         }
 
-        const identityMatch = title.match && authors.match && yearMatch;
+        const identityMatch = title.match && (authors.match || authorsUnknown) && yearMatch;
         if (identityMatch) matched++;
         else mismatched++;
         entryResults.push({

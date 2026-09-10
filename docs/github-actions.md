@@ -120,6 +120,7 @@ jobs:
 | Wrong DOI | DOI resolves, but its title and authors identify another paper |
 | Metadata drift | Title, complete author list, or publication year differs from Crossref |
 | Unverified DOI | Crossref cannot resolve or validate a DOI |
+| Missing authors | BibTeX entry has no author field, but Crossref lists one (warning, not an error) |
 | Missing DOI | BibTeX entry has no DOI (informational; not an error) |
 
 Pass `--offline` when a build must not call external APIs. Offline mode is fast

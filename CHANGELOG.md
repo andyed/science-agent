@@ -3,6 +3,16 @@
 # Changelog
 
 ## Unreleased
+
+- **An authorless BibTeX entry no longer fails the build.** `@techreport`,
+  `@misc`, standards, datasets and org-authored entries routinely carry no
+  `author` field. `compareAuthors` treated the empty list as drift, so a
+  correct entry produced an error-severity `author_mismatch` reading
+  "Author list differs from Crossref:  → International Organization for
+  Standardization" — and, since only errors set exit code 1, took CI red with
+  it. An absent author list is now its own `missing_authors` finding at `warn`,
+  the entry still counts as identity-verified when title and year match, and
+  `author_mismatch` is reserved for lists that actually disagree.
 - **`prose-audit` gained the third significance rule — the frame, not the predicate.**
   `significance-inflation` matches predicate forms ("a testament to", "underscores the
   importance") and `participial-significance-tail` matches ", highlighting"; neither sees

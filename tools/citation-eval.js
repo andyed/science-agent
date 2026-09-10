@@ -57,6 +57,12 @@ const metadata = new Map([
         authors: ['Foxtrot, Fay'],
         year: 2024,
     }],
+    ['10.5555/no-authors', {
+        title: 'Common Industry Format for Usability Test Reports',
+        authors: ['International Organization for Standardization'],
+        year: 2025,
+        years: [2025],
+    }],
     ['10.5555/missing-crossref-authors', {
         title: 'A Deposit Without Authors',
         authors: [],
@@ -102,13 +108,25 @@ async function main() {
     assert(typesFor('invalid').includes('invalid_doi'));
     assert(typesFor('missingdoi').includes('missing_doi'));
     assert(typesFor('missingcrossrefauthors').includes('author_mismatch'));
+    // An entry with no author field is a completeness gap, not author drift:
+    // it warns, it does not error, and the DOI still counts as verified.
+    assert(typesFor('noauthors').includes('missing_authors'));
+    assert(!typesFor('noauthors').includes('author_mismatch'));
+    assert.strictEqual(
+        result.issues.find(issue => issue.citation === 'noauthors').severity,
+        'warn',
+    );
+    assert.strictEqual(
+        result.entries.find(entry => entry.id === 'noauthors').status,
+        'verified',
+    );
     assert.strictEqual(calls.get('10.5555/duplicate'), 1, 'duplicate DOI should make one Crossref request');
-    assert.strictEqual(result.stats.total, 14);
+    assert.strictEqual(result.stats.total, 15);
     assert.strictEqual(result.stats.withoutDOI, 1);
     assert.strictEqual(result.stats.invalidDOI, 1);
     assert.strictEqual(result.stats.duplicateDOI, 1);
 
-    console.log('\x1b[32mcitation-eval: 21 assertions, 0 violations\x1b[0m');
+    console.log('\x1b[32mcitation-eval: 25 assertions, 0 violations\x1b[0m');
 }
 
 main().catch(error => {
