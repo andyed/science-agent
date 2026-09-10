@@ -3,6 +3,17 @@
 # Changelog
 
 ## Unreleased
+- **`prose-audit` gained the third significance rule — the frame, not the predicate.**
+  `significance-inflation` matches predicate forms ("a testament to", "underscores the
+  importance") and `participial-significance-tail` matches ", highlighting"; neither sees
+  the standalone sentence whose only job is telling the reader that the next clause
+  matters — "the part worth saying out loud", "it is worth noting that", "here's the
+  thing", "the key takeaway is". `significance-preamble` (v7) closes that. It is
+  deliberately narrow: bare "the key insight of X is" does not fire, because that is
+  method exposition, and "worth" is gated to discourse verbs so "not worth the compute"
+  and "worth 3 dB" stay clean. Both exclusions are pinned by
+  `test-fixtures/prose/negative/method-exposition.md`, not by the regex alone.
+
 
 - **`audit` now verifies the bibliography instead of trusting it.** Every
   DOI-bearing BibTeX entry is dereferenced through Crossref and compared with

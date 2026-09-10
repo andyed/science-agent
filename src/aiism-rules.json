@@ -1,11 +1,11 @@
 {
   "$schema": "./aiism-rules.LICENSE.md",
-  "version": 6,
+  "version": 7,
   "description": "Canonical AI-tell rule table for prose-audit. Loaded by science-agent/prose-audit.js. Engine-specific rules (custom traversal) are declared here for discoverability; their detectors live in code.",
   "owners": [
     "science-agent (canonical) — github.com/andyed/science-agent"
   ],
-  "notes": "v6 (2026-08-22): added 5 rules restoring coverage removed by the v2/v3 licence purges, re-derived from MIT-licensed sources — copula-avoidance, significance-inflation, participial-significance-tail, actorless-evidence (actorless/anthropomorphic claims) and weasel-attribution (uncited authority claims, citation-aware). v5 (2026-05-19): added 3 fragment-detection rules (fragment-discourse-marker, fragment-participial, fragment-relative-clause) addressing non-sentence-sentence patterns identified during AllSERP paper cleanup. v4 added 4 proselint-derived BSD-3-Clause rules. v3 removed CC-BY-SA-4.0; v2 removed CC BY-NC 4.0.",
+  "notes": "v7 (2026-09-09): added significance-preamble — the standalone flag-planting frame (\"the part worth saying out loud\", \"it is worth noting that\", \"here's the thing\") that the v6 significance rules miss because they match only predicate and participial forms. v6 (2026-08-22): added 5 rules restoring coverage removed by the v2/v3 licence purges, re-derived from MIT-licensed sources — copula-avoidance, significance-inflation, participial-significance-tail, actorless-evidence (actorless/anthropomorphic claims) and weasel-attribution (uncited authority claims, citation-aware). v5 (2026-05-19): added 3 fragment-detection rules (fragment-discourse-marker, fragment-participial, fragment-relative-clause) addressing non-sentence-sentence patterns identified during AllSERP paper cleanup. v4 added 4 proselint-derived BSD-3-Clause rules. v3 removed CC-BY-SA-4.0; v2 removed CC BY-NC 4.0.",
   "rules": [
     {
       "id": "em-dash-total",
@@ -378,6 +378,15 @@
       "message": "Participial tail asserting significance. The clause adds interpretation, not evidence. Cut it, or replace with the concrete consequence.",
       "notes": "Deliberately excludes demonstrating / illustrating / showing / reflecting / ensuring: those carry real result content in scientific prose and firing on them costs more precision than the rule is worth.",
       "source": "MIT-licensed skill corpus (stop-slop, deslop, no-ai-slop, elithrar/anti-slop — see aiism-rules.LICENSE.md)"
+    },
+    {
+      "id": "significance-preamble",
+      "kind": "single-phrase",
+      "severity": "warn",
+      "pattern": "\\b(?:it|that|this)(?:'s|’s|\\s+is)\\s+worth\\s+(?:noting|mentioning|emphasi[sz]ing|stressing|saying|stating|repeating|pointing\\s+out|calling\\s+out)\\b|\\b(?:what(?:'s|’s|\\s+is)|the\\s+(?:part|thing|bit|point))\\s+worth\\s+(?:noting|mentioning|emphasi[sz]ing|stressing|saying|stating|repeating|calling\\s+out)\\b|\\bworth\\s+saying\\s+(?:out\\s+loud|aloud)\\b|\\bhere(?:'s|’s|\\s+is)\\s+the\\s+thing\\b|\\bthe\\s+(?:important|key)\\s+thing\\s+(?:here\\s+)?(?:to\\s+(?:note|remember|understand)\\s+)?is\\b|\\bthe\\s+key\\s+takeaway\\s+is\\b|\\bthe\\s+(?:part|thing|bit)\\s+that\\s+(?:really\\s+)?matters\\s+(?:here\\s+)?is\\b|\\bthe\\s+key\\s+(?:insight|point)\\s+here\\s+is\\b",
+      "message": "Flag-planting preamble. Announces that the next clause matters instead of writing it so it lands. Delete the frame and keep the claim; if a sentence needs a herald, the sentence is the problem.",
+      "notes": "Third member of the significance family, catching the standalone frame that significance-inflation (predicate forms) and participial-significance-tail (', highlighting') both miss. Deliberately excludes bare 'the key insight/point is' without 'here': that is ordinary method exposition ('the key insight of the Rosenholtz model is that pooling regions scale with eccentricity') and firing on it would cost more precision than the rule is worth. 'Worth' is gated to discourse verbs (noting, saying, emphasizing), so 'not worth the compute' and 'worth 3 dB' do not fire.",
+      "source": "first-party observation (2026-09-09: \"The part worth saying out loud:\" flagged in a Psychodeli beat-tracking explainer; cf. muriel/aiism.py docstring naming 'It is important to note' as part of this family)"
     },
     {
       "id": "actorless-evidence",

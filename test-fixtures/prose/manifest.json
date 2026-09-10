@@ -108,6 +108,20 @@
         "phrase-regime"
       ],
       "why": "scotopic / photopic / linear / saturation / supra-threshold / ballistic regime are neutral domain vocabulary. Guards the suppress_pattern port from muriel.aiism RULE_SUPPRESS, which native previously lacked entirely on .tex."
+    },
+    {
+      "file": "positive/significance-preamble.md",
+      "must_fire": [
+        "significance-preamble"
+      ],
+      "why": "it is worth noting / the part worth saying out loud / here's the thing / the important thing to note is / the key takeaway is / the part that really matters is."
+    },
+    {
+      "file": "negative/method-exposition.md",
+      "must_not_fire": [
+        "significance-preamble"
+      ],
+      "why": "'the key insight of the Rosenholtz model is' is method exposition, not a discourse frame; 'not worth the additional compute', 'worth reporting in full' and 'worth 3 dB' are ordinary uses of worth."
     }
   ]
 }
