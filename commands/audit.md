@@ -1,5 +1,5 @@
 ---
-description: Audit citations in a directory against a BibTeX file. Args: <dir> --bibtex=<path> [--json] [--verbose]
+description: Audit citations and verify BibTeX DOI metadata against Crossref. Args: <dir> --bibtex=<path> [--offline] [--json] [--verbose]
 ---
 
 Run the science-agent citation audit with the user's arguments:
@@ -8,4 +8,7 @@ Run the science-agent citation audit with the user's arguments:
 NODE_PATH="${CLAUDE_PLUGIN_DATA}/node_modules" node "${CLAUDE_PLUGIN_ROOT}/cli.js" audit $ARGUMENTS
 ```
 
-Then summarize the result. Lead with orphan and ambiguous citations (the actionable signal). If `$ARGUMENTS` is empty, ask the user for a directory and a BibTeX path.
+Then summarize the result. Lead with wrong DOI, title, author, and year
+mismatches, followed by orphan and ambiguous citations. `--offline` must be
+described as a local linkage check, not a metadata verification. If
+`$ARGUMENTS` is empty, ask the user for a directory and a BibTeX path.

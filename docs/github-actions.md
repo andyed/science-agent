@@ -30,7 +30,14 @@ jobs:
         run: npx github:andyed/science-agent audit . --bibtex=refs.bib
 ```
 
-That's it. Any PR that touches markdown, LaTeX, or BibTeX files gets audited. The job fails if citation errors are found (orphans, ambiguous matches, missing DOIs).
+That's it. Any PR that touches markdown, LaTeX, or BibTeX files gets audited.
+The job fails if citation errors are found, including DOI metadata that resolves
+to a different title or author list. The default audit calls the public Crossref
+API and therefore requires network access.
+
+For an intentionally local-only CI job, append `--offline`. That mode checks
+inline-to-BibTeX linkage but prints that Crossref verification was skipped; it
+does not provide a BibTeX metadata integrity guarantee.
 
 ## Customize
 
@@ -110,9 +117,14 @@ jobs:
 |-------|----------|
 | Orphan citations | Inline `Author (Year)` with no BibTeX entry |
 | Ambiguous citations | `Pelli (2008)` matches 2+ BibTeX entries |
-| Missing DOI | BibTeX entry has no DOI (warning, not error) |
+| Wrong DOI | DOI resolves, but its title and authors identify another paper |
+| Metadata drift | Title, complete author list, or publication year differs from Crossref |
+| Unverified DOI | Crossref cannot resolve or validate a DOI |
+| Missing DOI | BibTeX entry has no DOI (informational; not an error) |
 
-The tool does NOT call external APIs in CI by default — it only matches against your local BibTeX file. This keeps builds fast and offline-capable. Use `verify` or `search` commands for online verification in local development.
+Pass `--offline` when a build must not call external APIs. Offline mode is fast
+and useful for linkage checks, but it deliberately does not claim that titles,
+authors, or DOI identities were verified.
 
 ## Exit codes
 

@@ -2,8 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const Fuse = require('fuse.js');
-const { extractInlineCitations, extractDOIs } = require('./patterns');
+const { extractInlineCitations } = require('./patterns');
 const { parseBibTeX, buildLookup } = require('./bibtex');
 
 /**
@@ -11,10 +10,13 @@ const { parseBibTeX, buildLookup } = require('./bibtex');
  *
  * For each inline citation found in .md/.html/.js files:
  *   1. Look up in BibTeX by surname+year
- *   2. If found, check title consistency (fuzzy match)
- *   3. If not found, flag as orphan (no BibTeX entry)
- *   4. Check for DOI presence
- *   5. Flag ambiguous citations (same surname+year, multiple papers)
+ *   2. If not found, flag as orphan (no BibTeX entry)
+ *   3. Check for DOI presence
+ *   4. Flag ambiguous citations (same surname+year, multiple papers)
+ *
+ * Crossref metadata verification is performed by auditBibTeX. Keeping the
+ * local prose scan separate makes the trust boundary explicit: a BibTeX file
+ * can resolve an inline citation while still containing fabricated metadata.
  *
  * Returns { citations: [...], issues: [...], stats: {...} }
  */
@@ -24,14 +26,6 @@ function auditDirectory(dir, bibtexPath, options = {}) {
     // Parse BibTeX
     const index = parseBibTeX(bibtexPath);
     const lookup = buildLookup(index);
-
-    // Build fuzzy title matcher
-    const allEntries = [...index.values()];
-    const fuse = new Fuse(allEntries, {
-        keys: ['title'],
-        threshold: 0.4,
-        includeScore: true,
-    });
 
     const citations = [];
     const issues = [];
@@ -54,7 +48,6 @@ function auditDirectory(dir, bibtexPath, options = {}) {
         const text = fs.readFileSync(filepath, 'utf-8');
         const relPath = path.relative(dir, filepath);
         const inlineCites = extractInlineCitations(text);
-        const dois = extractDOIs(text);
 
         for (const cite of inlineCites) {
             const surname = cite.authors.split(/[,&]| and | et al/i)[0].trim().toLowerCase();
@@ -77,7 +70,6 @@ function auditDirectory(dir, bibtexPath, options = {}) {
                 inBibTeX: false,
                 hasDOI: false,
                 ambiguous: false,
-                titleMatch: null,
             };
 
             // Look up in BibTeX

@@ -10,6 +10,14 @@ Verify what AI writes about science — citations, claims, and cross-file consis
 npx github:andyed/science-agent audit ./docs --bibtex=./refs.bib
 ```
 
+`audit` verifies every DOI-bearing BibTeX entry against Crossref by default,
+then compares canonical title, complete author list, publication year, volume,
+and pages. Use `--offline` only when you intentionally want the local
+author/year-to-BibTeX scan without that metadata guarantee.
+
+Set `SCIENCE_AGENT_CROSSREF_MAILTO` if you want requests to opt into
+Crossref's contact-identified polite pool. No email address is sent by default.
+
 Or verify a single DOI against CrossRef:
 
 ```bash
@@ -152,8 +160,11 @@ The CLI must be available on `$PATH` (or via `node cli.js`) for `figure-audit` t
 git clone https://github.com/andyed/science-agent.git
 cd science-agent && npm install
 
-# Audit citations in a directory against a BibTeX file
+# Audit citations and verify every DOI-bearing BibTeX entry against Crossref
 node cli.js audit ./docs/specs --bibtex=./refs.bib
+
+# Explicit local-only mode (does not validate BibTeX metadata)
+node cli.js audit ./docs/specs --bibtex=./refs.bib --offline
 
 # Audit notebook claim references
 node cli.js notebook-audit ./docs --aggregate=./docs/notebook-key-claims.md
@@ -181,9 +192,15 @@ node cli.js search "Metamers of the ventral stream"
   Citations: 62
   In BibTeX: 33
   Orphans:   29
-  With DOI:  29
+  Cites with DOI: 29
   Ambiguous: 1
-  Issues:    30
+  Bib entries: 41
+  Bib DOI verified: 39/39
+  Metadata matches: 38
+  Metadata mismatches: 1
+  Missing DOI: 2
+  Unverified DOI: 0
+  Issues:    33
 
 ── Issues ──
 
@@ -194,6 +211,10 @@ node cli.js search "Metamers of the ventral stream"
   ℹ [orphan] Schwartz (1980)
     cmf_mip_derivation.md
     has no BibTeX entry
+
+  ✗ [wrong_doi] maxwell2018scent
+    refs.bib
+    DOI resolves to a different paper
 ```
 
 ## Why this exists
@@ -207,7 +228,11 @@ AI coding assistants confabulate academic citations at a measurable rate. The mo
 | AI-assisted project docs ([our audit](FINDINGS.md)) | **12–24%** |
 | AI-generated citations across 13 LLMs ([GhostCite](https://arxiv.org/abs/2602.06718)) | **14–95%** |
 
-The fix: **require a DOI for every citation. Verify it against CrossRef.** In our corpus, DOI presence had a 0% confabulation rate. Science Agent automates this.
+The fix: **require a DOI where one exists, then verify that it resolves to the
+claimed title and authors.** DOI presence alone is not evidence: an adjacent
+proceedings DOI can resolve successfully to a completely different paper.
+Science Agent automates the metadata comparison rather than trusting the shape
+or resolvability of the DOI string.
 
 See [FINDINGS.md](FINDINGS.md) for the complete audit with methodology, data, patterns, and the 95/5 confabulation taxonomy.
 

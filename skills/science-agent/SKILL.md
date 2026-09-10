@@ -25,7 +25,11 @@ npm install -g github:andyed/science-agent
 
 ```bash
 # Audit every citation in a directory against a BibTeX file
+# (DOI-bearing entries are verified against Crossref by default)
 science-agent audit ./docs --bibtex=./refs.bib
+
+# Local linkage check only; explicitly skips BibTeX metadata verification
+science-agent audit ./docs --bibtex=./refs.bib --offline
 
 # Verify a single DOI resolves to the claimed paper
 science-agent verify 10.1167/jov.25.3.15
@@ -44,6 +48,9 @@ science-agent figure-audit ./figures/INDEX.md
 ```
 
 Add `--json` to any command for machine-readable output.
+
+Do not describe an `--offline` audit as citation metadata verification. It only
+checks whether inline author/year citations map to local BibTeX entries.
 
 ## The find → verify pattern
 

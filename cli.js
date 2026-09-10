@@ -5,7 +5,7 @@
  * science-agent — Detect AI-confabulated academic citations
  *
  * Usage:
- *   science-agent audit <dir> --bibtex=<path>    Audit citations against BibTeX
+ *   science-agent audit <dir> --bibtex=<path>    Audit citations and verify BibTeX against Crossref
  *   science-agent arxiv [count] [--cat=cs.AI]     Audit recent arXiv papers
  *   science-agent arxiv-search "query"            Search arXiv; surfaces published DOI to verify
  *   science-agent verify <doi>                    Verify a DOI against CrossRef
@@ -28,7 +28,9 @@ function usage() {
 science-agent — Detect AI-confabulated academic citations
 
 Usage:
-  science-agent audit <dir> --bibtex=<path>    Audit citations against BibTeX
+  science-agent audit <dir> --bibtex=<path>    Audit citations and verify BibTeX against Crossref
+    --offline                                    Skip Crossref metadata verification explicitly
+    --concurrency=2                              Maximum concurrent Crossref requests
   science-agent arxiv [count] [--cat=cs.AI]     Audit recent arXiv papers
   science-agent arxiv-search "query"            Search arXiv by free text (or --id=2401.12345)
     --max=10                                      Max results (cap 50)
@@ -87,23 +89,93 @@ async function main() {
             process.exit(1);
         }
 
+        const resolvedDir = path.resolve(dir);
+        const resolvedBibtex = path.resolve(bibtex);
         const { auditDirectory } = require('./src/audit');
-        const result = auditDirectory(path.resolve(dir), path.resolve(bibtex));
+        const citationResult = auditDirectory(resolvedDir, resolvedBibtex);
+
+        let bibtexResult;
+        if (flags.offline) {
+            const { parseBibTeX } = require('./src/bibtex');
+            const entries = [...parseBibTeX(resolvedBibtex).values()];
+            bibtexResult = {
+                skipped: true,
+                reason: '--offline',
+                entries: [],
+                issues: [],
+                stats: {
+                    total: entries.length,
+                    withDOI: entries.filter(entry => entry.doi).length,
+                    withoutDOI: entries.filter(entry => !entry.doi).length,
+                    verified: 0,
+                    matched: 0,
+                    mismatched: 0,
+                    unverified: 0,
+                    invalidDOI: 0,
+                    duplicateDOI: 0,
+                    issueCount: 0,
+                },
+            };
+        } else {
+            const { auditBibTeX } = require('./src/bib-audit');
+            let progressShown = 0;
+            if (!flags.json) process.stderr.write('  verifying BibTeX metadata against Crossref…\n');
+            bibtexResult = await auditBibTeX(resolvedBibtex, {
+                concurrency: flags.concurrency,
+                onProgress: flags.json ? null : (completed, total) => {
+                    if (completed === total || completed - progressShown >= 10) {
+                        process.stderr.write(`\r  verified ${completed}/${total} DOI entries…  `);
+                        progressShown = completed;
+                    }
+                    if (completed === total) process.stderr.write('\n');
+                },
+            });
+        }
+
+        const issues = [...citationResult.issues, ...bibtexResult.issues];
+        const result = {
+            ...citationResult,
+            issues,
+            bibtex: bibtexResult,
+            stats: {
+                ...citationResult.stats,
+                issueCount: issues.length,
+                bibEntries: bibtexResult.stats.total,
+                bibWithDOI: bibtexResult.stats.withDOI,
+                bibVerified: bibtexResult.stats.verified,
+                bibMatched: bibtexResult.stats.matched,
+                bibMismatched: bibtexResult.stats.mismatched,
+                bibUnverified: bibtexResult.stats.unverified,
+            },
+        };
+
+        const errors = result.issues.filter(issue => issue.severity === 'error').length;
 
         if (flags.json) {
             console.log(JSON.stringify(result, null, 2));
+            if (errors > 0) process.exitCode = 1;
             return;
         }
 
         // Pretty print
         console.log(`\n═══ Science Agent Audit ═══\n`);
-        console.log(`  Directory: ${path.resolve(dir)}`);
-        console.log(`  BibTeX:    ${path.resolve(bibtex)}`);
+        console.log(`  Directory: ${resolvedDir}`);
+        console.log(`  BibTeX:    ${resolvedBibtex}`);
         console.log(`  Citations: ${result.stats.total}`);
         console.log(`  In BibTeX: ${result.stats.inBibTeX}`);
         console.log(`  Orphans:   ${result.stats.orphans}`);
-        console.log(`  With DOI:  ${result.stats.withDOI}`);
+        console.log(`  Cites with DOI: ${result.stats.withDOI}`);
         console.log(`  Ambiguous: ${result.stats.ambiguous}`);
+        console.log(`  Bib entries: ${result.stats.bibEntries}`);
+        if (bibtexResult.skipped) {
+            console.log(`  Crossref:  skipped (${bibtexResult.reason})`);
+        } else {
+            console.log(`  Bib DOI verified: ${result.stats.bibVerified}/${result.stats.bibWithDOI}`);
+            console.log(`  Metadata matches: ${result.stats.bibMatched}`);
+            console.log(`  Metadata mismatches: ${result.stats.bibMismatched}`);
+            console.log(`  Missing DOI: ${bibtexResult.stats.withoutDOI}`);
+            console.log(`  Unverified DOI: ${result.stats.bibUnverified}`);
+        }
         console.log(`  Issues:    ${result.stats.issueCount}\n`);
 
         if (result.issues.length > 0) {
@@ -123,10 +195,17 @@ async function main() {
                 console.log(`  ${status} ${c.raw}  (${c.file})`);
             }
             console.log('');
+            if (!bibtexResult.skipped) {
+                console.log(`── BibTeX Metadata ──\n`);
+                for (const entry of bibtexResult.entries) {
+                    const status = entry.status === 'verified' ? '✓' : entry.status === 'missing_doi' ? '~' : '✗';
+                    console.log(`  ${status} ${entry.id}${entry.doi ? `  (${entry.doi})` : ''} — ${entry.status}`);
+                }
+                console.log('');
+            }
         }
 
         // Exit code
-        const errors = result.issues.filter(i => i.severity === 'error').length;
         if (errors > 0) process.exit(1);
 
     } else if (command === 'arxiv') {

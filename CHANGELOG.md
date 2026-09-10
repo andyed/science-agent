@@ -4,6 +4,27 @@
 
 ## Unreleased
 
+- **`audit` now verifies the bibliography instead of trusting it.** Every
+  DOI-bearing BibTeX entry is dereferenced through Crossref and compared with
+  the canonical title, complete author list, publication year, volume, and
+  pages. A DOI that resolves to another paper is `wrong_doi`; title-only,
+  author-only, and year drift are separate errors; volume/page drift is a
+  warning; missing DOIs are explicit informational findings. `--offline` keeps
+  the old local linkage scan, but labels the metadata pass as skipped. This
+  closes the circular-validation failure where an audit declared prose clean
+  because it matched an already-confabulated `references.bib`.
+- **Citation metadata regression harness.** `tools/citation-eval.js` covers the
+  exact failure classes that escaped: a close-but-wrong title, a plausible DOI
+  resolving to the wrong paper, author and year drift, pagination drift,
+  duplicate/invalid/unresolved DOIs, missing DOIs, LaTeX accents, `and others`,
+  and de-duplicated Crossref requests.
+- **Crossref batch verification handles rate limits without disclosing contact
+  data by default.** `429` and `5xx` responses honor `Retry-After` or retry with
+  bounded exponential backoff. The default batch concurrency is two;
+  persistent failures remain `doi_unverified` errors rather than turning into
+  a clean run. `SCIENCE_AGENT_CROSSREF_MAILTO` explicitly opts into Crossref's
+  contact-identified polite pool.
+
 - **`notebook-audit` could not see the notation its consumers write, and said nothing** — the claim-ID grammar was written three times in [`src/notebook-audit.js`](src/notebook-audit.js) (reference pattern, aggregate row, notebook row scan) and all three read `K\d+`, with the reference pattern additionally anchored at `[NB`. Consumers mint parallel ID namespaces whenever a cascade supersedes a claim without renumbering it — `K-bbox-3`, `K-leak-7a`, `K-typed-12`, `K27.3` — and tag references by regime and attribution flavor: `[LAB, AdSERP, organic, NB21:K-bbox-3]`. None of that matched, and a non-match is skipped rather than reported, so the audit passed on a fraction of the table. Measured on `attentional-foraging`: **460 of 579 aggregate rows visible before, all 579 after** (+119), and the run that reported 48 references / 1 issue now reports 55 / 3, the two new errors being a real unfilled `[NB22:K-leak-N]` placeholder and a malformed range citation. The grammar is now defined once as `K_ID` and shared by all three call sites.
 - **Zero-parse guards — the tool no longer reports success for having seen nothing.** Every silent failure it has had took that shape. An aggregate that parses to 0 claims is now `aggregate_parsed_empty` (error); a populated aggregate with 0 references parsed from the prose is `no_refs_parsed` (error); a Key Claims block that parses to 0 rows is `empty_key_claims_block` (warn) instead of rendering a checkmark — that is how a stdout fragment or a `*(see executed cell output)*` placeholder presents.
 - **Two notebook files under one label are no longer silently merged** — `parseAggregate` used `notebooks.set(label, new Map())` per heading, so a second `## NB25:` section discarded the first section's claims. It merges now, and `ambiguous_notebook_label` warns when a label maps to more than one file, which was producing false `missing_claim` errors.
