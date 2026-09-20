@@ -936,3 +936,16 @@ module.exports = {
     stripLatex,
     stripMarkdownCodeAndMath,
 };
+
+
+// Running a src/ module directly exits 0 and prints nothing, which for an
+// audit tool is indistinguishable from a clean result. Fail loudly instead.
+if (require.main === module) {
+    console.error(
+        `science-agent: src/prose-audit.js is a library, not a command.\n` +
+        'Invoking it directly produces no output and no findings, whatever the input.\n' +
+        'Use:\n' +
+        '  node cli.js prose-audit <file-or-dir> [--severity=warn]\n'
+    );
+    process.exit(2);
+}

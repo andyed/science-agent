@@ -51,3 +51,16 @@ function extractArxivIds(text) {
 }
 
 module.exports = { extractInlineCitations, extractDOIs, extractArxivIds, INLINE_PATTERN, FULL_REF_PATTERN };
+
+
+// Running a src/ module directly exits 0 and prints nothing, which for an
+// audit tool is indistinguishable from a clean result. Fail loudly instead.
+if (require.main === module) {
+    console.error(
+        `science-agent: src/patterns.js is a library, not a command.\n` +
+        'Invoking it directly produces no output and no findings, whatever the input.\n' +
+        'Use:\n' +
+        '  node cli.js --help\n'
+    );
+    process.exit(2);
+}

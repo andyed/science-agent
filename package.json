@@ -8,13 +8,25 @@
   },
   "scripts": {
     "audit": "node cli.js audit",
-    "test": "npm run test:citations && npm run test:bib-metadata && npm run test:prose && npm run test:notebook",
+    "test": "npm run test:cli-guard && npm run test:citations && npm run test:bib-metadata && npm run test:prose && npm run test:notebook && npm run test:repro",
     "test:citations": "node cli.js audit ./test-fixtures --bibtex=./test-fixtures/refs.bib --offline",
     "test:bib-metadata": "node tools/citation-eval.js",
     "test:prose": "node tools/prose-eval.js",
-    "test:notebook": "node tools/notebook-eval.js"
+    "test:notebook": "node tools/notebook-eval.js",
+    "test:repro": "node tools/repro-eval.js",
+    "test:cli-guard": "node tools/cli-guard-eval.js"
   },
-  "keywords": ["science", "citation", "academic", "confabulation", "ai", "verification", "bibtex", "crossref", "research"],
+  "keywords": [
+    "science",
+    "citation",
+    "academic",
+    "confabulation",
+    "ai",
+    "verification",
+    "bibtex",
+    "crossref",
+    "research"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/andyed/science-agent.git"
