@@ -1,8 +1,69 @@
-
-
 # Changelog
 
-## Unreleased
+## 0.7.0 (2026-11-10)
+
+First tagged release since 0.1.0; versions 0.2.0–0.6.0 were manifest bumps
+without tags. Three additions change what a clean run means: `audit` verifies
+BibTeX metadata against Crossref instead of trusting the `.bib`, `repro-audit`
+checks producers before the prose that quotes them, and a run that read
+nothing (a missing path, zero sidecars, an aggregate that parses to zero
+claims) is an error instead of a pass.
+
+- **A path that does not exist is never a clean run.** `notebook-audit` on a
+  missing directory printed an info note and exited 0, so a typo in a CI step
+  passed having read nothing; it now exits 2, matching `figure-audit`,
+  `repro-audit` and `prose-audit`. `audit` on a missing directory exited 1 with
+  a raw `ENOENT` stack trace and now prints one line. A directory that exists
+  but holds no `[NB##:K##]` references still degrades gracefully with setup
+  help. `tools/cli-guard-eval.js` asserts the rule for all six path-taking
+  commands; reverting the `notebook-audit` exit turns it red.
+- **`--help` / `-h` and `--version` / `-v`.** Both printed "Unknown command"
+  and exited 1. Help exits 0; an unknown command and a bare invocation still
+  exit 1.
+- **CI runs every harness.** The workflow ran three of six: `test:cli-guard`,
+  `test:bib-metadata` and `test:repro` were in `npm test` and not in CI. It
+  also checks `package-lock.json` against `package.json`; the lockfile had
+  said 0.1.0 since the first release.
+- **`LICENSE` file.** The README and `package.json` said MIT; the repo carried
+  no license text and GitHub reported none.
+- **Docs.** README sections for `figure-audit`, `repro-audit` and
+  `prose-audit`, a full CLI example list, and an exit-code table.
+  `prose-audit` joins the skills.sh command list. CI recipes for reproduction
+  gates and prose linting in [`docs/github-actions.md`](docs/github-actions.md).
+
+- **`repro-audit` — the first producer-side auditor.** Every other command here
+  is consumer-side: it reads what a producer already wrote and asks whether the
+  prose is faithful to it. None of them can see the failure one step earlier —
+  a script computing a new number on a stream whose already-published number it
+  can no longer reproduce. The prose then quotes a wrong value faithfully and
+  every other audit passes. The gate closes that: a producer recomputes a
+  shipped number on the same inputs, aborts if it does not come back, and
+  records the outcome in its `summary.json`. The new command reads those blocks
+  and flags gates that are absent (`ungated`), failing (`gate_failed`), skipped
+  with no stated reason (`gate_skipped_undocumented`), or pinned to a value the
+  cited source has since moved off (`stale_pin`). Ships with `agents/repro-gate.md`
+  and `/science-agent:repro-audit`.
+  - A gate's self-reported `status` is not the check. The delta is recomputed
+    against the tolerance, so a block claiming `ok` while its own delta blows
+    its own tolerance still fires.
+  - `stale_pin` is the finding that decays silently: a gate pinned to a literal
+    keeps passing forever after the number moves upstream, certifying the
+    producer against a retired value. Pinning to `source` + `source_path` is
+    what makes it checkable at all, so a literal pin is a `uncited_pin` warning.
+  - `ungated` is a warning, not an error, unless `--require-gate` is passed. A
+    research output tree is mostly descriptive dumps with no shipped number to
+    reproduce; erroring on all of them buried the gates that exist and are
+    broken under 167 that were never in a lineage.
+  - Python's JSON dialect is read. `json.dump` emits bare `NaN` / `Infinity`,
+    which `JSON.parse` rejects; on a real 177-sidecar output tree a strict
+    reader failed on most files and therefore saw none of the gates inside
+    them. Strict parse first, substitution only on files that already failed.
+  - A run that scans zero sidecars exits 2. Zero findings from a blind walk is
+    indistinguishable from a fully gated repo, and `tools/repro-eval.js` carries
+    an empty-directory fixture plus `min_producers` / `min_checks` floors that
+    assert the auditor can still see. Verified by mutation: suppressing stale-pin
+    detection, dropping the Python dialect, and capping the directory walk each
+    trip the harness.
 
 - **An authorless BibTeX entry no longer fails the build.** `@techreport`,
   `@misc`, standards, datasets and org-authored entries routinely carry no
@@ -23,7 +84,6 @@
   method exposition, and "worth" is gated to discourse verbs so "not worth the compute"
   and "worth 3 dB" stay clean. Both exclusions are pinned by
   `test-fixtures/prose/negative/method-exposition.md`, not by the regex alone.
-
 
 - **`audit` now verifies the bibliography instead of trusting it.** Every
   DOI-bearing BibTeX entry is dereferenced through Crossref and compared with
