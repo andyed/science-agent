@@ -5,7 +5,7 @@ description: Audit citations and verify BibTeX DOI metadata against Crossref. Ar
 Run the science-agent citation audit with the user's arguments:
 
 ```bash
-NODE_PATH="${CLAUDE_PLUGIN_DATA}/node_modules" node "${CLAUDE_PLUGIN_ROOT}/cli.js" audit $ARGUMENTS
+node "${CLAUDE_PLUGIN_ROOT}/cli.js" audit $ARGUMENTS
 ```
 
 Then summarize the result. Lead with wrong DOI, title, author, and year

@@ -5,7 +5,7 @@ description: Lint paper drafts for AI-tell prose patterns. Args: <file-or-dir> [
 Run the science-agent prose audit with the user's arguments:
 
 ```bash
-NODE_PATH="${CLAUDE_PLUGIN_DATA}/node_modules" node "${CLAUDE_PLUGIN_ROOT}/cli.js" prose-audit $ARGUMENTS
+node "${CLAUDE_PLUGIN_ROOT}/cli.js" prose-audit $ARGUMENTS
 ```
 
 Then summarize. Lead with the highest-severity rule clusters (where the same rule fires many times — that's the actionable signal). If `$ARGUMENTS` is empty, ask the user for a file or directory.

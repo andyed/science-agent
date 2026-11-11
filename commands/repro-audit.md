@@ -5,7 +5,7 @@ description: Check that producers reproduce a shipped number before reporting a 
 Run repro-audit with the user's arguments:
 
 ```bash
-NODE_PATH="${CLAUDE_PLUGIN_DATA}/node_modules" node "${CLAUDE_PLUGIN_ROOT}/cli.js" repro-audit $ARGUMENTS
+node "${CLAUDE_PLUGIN_ROOT}/cli.js" repro-audit $ARGUMENTS
 ```
 
 Lead with the gates that exist and are broken — `gate_failed` and `stale_pin` — not
