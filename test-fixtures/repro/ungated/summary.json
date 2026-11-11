@@ -1,0 +1,7 @@
+{
+  "within_trial_auc": 0.710,
+  "pooled_auc": 0.684,
+  "page_grain_mrr": 0.227,
+  "n_rows": 8653,
+  "provenance": { "commit": "9f8e7d6" }
+}

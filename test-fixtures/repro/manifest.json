@@ -1,0 +1,129 @@
+{
+  "description": "Assertions for tools/repro-eval.js. must_fire proves the auditor still catches a defect; must_not_fire proves it has not become permissive; min_producers / min_checks are the floors that prove it still parses anything at all. A repro-audit that reads zero sidecars reports zero defects, which is indistinguishable from a fully gated repo \u2014 that ambiguity is the failure mode these floors exist to close.",
+  "cases": [
+    {
+      "name": "gated-ok",
+      "why": "The shape the discipline produces: a producer that reproduced its shipped number within its declared tolerance, with a pin that still resolves to the value its cited source carries. Nothing should fire.",
+      "dir": "gated-ok",
+      "min_producers": 1,
+      "min_checks": 1,
+      "must_not_fire": [
+        "ungated",
+        "gate_failed",
+        "stale_pin",
+        "uncited_pin",
+        "unresolvable_pin",
+        "unanchored_input",
+        "gate_empty",
+        "parse_error"
+      ]
+    },
+    {
+      "name": "ungated",
+      "why": "The headline finding. A producer emitting four new numerics with no gate block reproduced nothing before reporting them, and every downstream audit will still pass because the prose quotes those numerics faithfully.",
+      "dir": "ungated",
+      "min_producers": 1,
+      "must_fire": [
+        "ungated"
+      ],
+      "must_not_fire": [
+        "unanchored_input"
+      ]
+    },
+    {
+      "name": "gate-failed",
+      "why": "A gate that claims status ok while its own delta exceeds its own declared tolerance. The self-reported status is not the check \u2014 recomputing |delta| against the tolerance is.",
+      "dir": "gate-failed",
+      "min_producers": 1,
+      "min_checks": 1,
+      "must_fire": [
+        "gate_failed"
+      ],
+      "must_not_fire": [
+        "ungated",
+        "stale_pin"
+      ]
+    },
+    {
+      "name": "stale-pin",
+      "why": "The quiet one. The gate passes forever because the pin is a literal, but the shipped number moved upstream (0.691 to 0.680), so the producer now certifies itself against a retired value. Citing source + source_path is what makes this visible.",
+      "dir": "stale-pin",
+      "min_producers": 1,
+      "min_checks": 1,
+      "must_fire": [
+        "stale_pin"
+      ],
+      "must_not_fire": [
+        "ungated",
+        "uncited_pin",
+        "unresolvable_pin"
+      ]
+    },
+    {
+      "name": "skipped",
+      "why": "A skip is legitimate when a stream genuinely has no shipped number (a rate-thinned cache), and is an escape hatch otherwise. The reason string is the whole difference, so an undocumented skip has to fire and a documented one has to not.",
+      "dir": "skipped",
+      "min_producers": 2,
+      "must_fire": [
+        "gate_skipped_undocumented"
+      ],
+      "must_not_fire": [
+        "ungated",
+        "gate_failed"
+      ]
+    },
+    {
+      "name": "uncited",
+      "why": "A passing gate whose shipped value is a bare literal. It is not wrong today, but nothing can tell whether it is still current, so it degrades into a stale pin without ever changing state.",
+      "dir": "uncited",
+      "min_producers": 1,
+      "min_checks": 1,
+      "must_fire": [
+        "uncited_pin",
+        "unanchored_input"
+      ],
+      "must_not_fire": [
+        "ungated",
+        "gate_failed",
+        "stale_pin"
+      ]
+    },
+    {
+      "name": "empty",
+      "why": "The fixture this tool exists to trip. No sidecars means nothing was checked, and a tool that prints a clean report here is the exact silent-auditor failure the notebook corpus was built to catch. Must exit nonzero.",
+      "dir": "empty",
+      "expect_scanned": 0,
+      "expect_nonzero_exit": true
+    },
+    {
+      "name": "python-dialect",
+      "why": "json.dump emits bare NaN / Infinity / -Infinity, which JSON.parse rejects. On the attentional-foraging output tree a strict reader failed on most sidecars and therefore saw none of the gates inside them: a parse error reads as a broken file, not as an auditor that has gone blind. Adjacent NaNs in one array share a delimiter, which is why the substitution runs twice.",
+      "dir": "python-dialect",
+      "min_producers": 1,
+      "min_checks": 1,
+      "must_not_fire": [
+        "parse_error",
+        "ungated",
+        "gate_failed",
+        "stale_pin",
+        "uncited_pin",
+        "unresolvable_pin",
+        "unanchored_input"
+      ]
+    },
+    {
+      "name": "whole-corpus",
+      "why": "Walked as one tree, the auditor has to still separate the gated producer from the six defective ones. A recursive walk that collapses them, or one that stops at the first directory, shows up here and not in the single-case runs.",
+      "dir": ".",
+      "min_producers": 10,
+      "min_checks": 5,
+      "must_fire": [
+        "ungated",
+        "gate_failed",
+        "stale_pin",
+        "gate_skipped_undocumented",
+        "uncited_pin"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "gate": { "status": "skipped" },
+  "provenance": { "commit": "1234abc" },
+  "thinned_auc": 0.641
+}

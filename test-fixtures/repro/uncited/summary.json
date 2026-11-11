@@ -1,0 +1,10 @@
+{
+  "gate": {
+    "status": "ok",
+    "name": "hardcoded shipped M4-7",
+    "shipped": 0.691,
+    "reproduced": 0.691,
+    "delta": 0.0
+  },
+  "mean_dist_auc": 0.665
+}

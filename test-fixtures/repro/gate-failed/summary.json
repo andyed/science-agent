@@ -1,0 +1,14 @@
+{
+  "gate": {
+    "status": "ok",
+    "name": "shipped section 4.3 deployable M4-7",
+    "shipped": 0.691,
+    "reproduced": 0.6634,
+    "delta": -0.0276,
+    "tolerance": 0.0005,
+    "source": "../shipped/summary.json",
+    "source_path": "section_4_3.deployable_M4_7.pooled_auc"
+  },
+  "provenance": { "commit": "deadbee" },
+  "carve_auc": 0.612
+}

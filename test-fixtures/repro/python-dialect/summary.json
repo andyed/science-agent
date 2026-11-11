@@ -1,0 +1,18 @@
+{
+  "gate": {
+    "status": "ok",
+    "name": "shipped section 4.3 deployable M4-7",
+    "shipped": 0.691,
+    "reproduced": 0.691,
+    "delta": 0.0,
+    "tolerance": 0.0005,
+    "source": "../shipped/summary.json",
+    "source_path": "section_4_3.deployable_M4_7.pooled_auc"
+  },
+  "provenance": { "commit": "b0bacaf" },
+  "rho_by_tercile": [NaN, NaN, 0.31],
+  "empty_group_median": NaN,
+  "max_buffer_size": Infinity,
+  "min_lag": -Infinity,
+  "note": "the literal NaN in this sentence must survive untouched"
+}

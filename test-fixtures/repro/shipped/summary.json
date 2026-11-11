@@ -1,0 +1,13 @@
+{
+  "section_4_3": {
+    "deployable_M4_7": {
+      "pooled_auc": 0.6910,
+      "n_records": 9932
+    }
+  },
+  "provenance": {
+    "feature_records_sha256": {
+      "buf7": "3f1a9c0e5b2d8471aa60cf3e9d12b4578e6c0a9f1d3b5e72c84a06f9b1d2e3c4"
+    }
+  }
+}

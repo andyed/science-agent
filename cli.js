@@ -48,6 +48,9 @@ Usage:
                                                    muriel.aiism when available)
     --severity=warn                               Exit nonzero at this severity (info|warn|error)
     --no-pencil                                   Don't skip pencil-locked sentences
+  science-agent repro-audit <dir-or-sidecar>    Check producers reproduce a shipped number before reporting a new one
+    --require-gate                                Treat an ungated producer as an error, not a warning
+    --verbose                                     List every sidecar instead of collapsing the ungated ones
     --no-muriel                                   Skip the Python muriel.aiism pass (native only)
     --no-native                                   Skip the native ARS rule set (muriel only)
   science-agent figure-audit <INDEX.md>         Verify figure caption numerics against summary.json sidecars
@@ -541,6 +544,41 @@ async function main() {
         const targetPath = path.resolve(target);
         if (!fs.existsSync(targetPath)) {
             console.error(`prose-audit: not found: ${targetPath}`);
+    } else if (command === 'repro-audit') {
+        const target = positional[0];
+        if (!target) {
+            console.error('usage: science-agent repro-audit <dir-or-sidecar> [--verbose] [--json]');
+            process.exit(2);
+        }
+        const targetPath = path.resolve(target);
+        if (!fs.existsSync(targetPath)) {
+            console.error(`repro-audit: not found: ${targetPath}`);
+            process.exit(2);
+        }
+        const { auditRepro, formatReport } = require('./src/repro-audit');
+        const audit = auditRepro(targetPath, {
+            verbose: flags.verbose === true,
+            requireGate: flags['require-gate'] === true,
+        });
+
+        if (flags.json) {
+            console.log(JSON.stringify(audit, null, 2));
+        } else {
+            console.log(`\n═══ Science Agent: Reproduction-Gate Audit ═══\n`);
+            console.log(formatReport(audit, { verbose: flags.verbose === true }));
+            console.log('');
+        }
+
+        // Zero sidecars parsed is indistinguishable from a fully gated repo.
+        // Exit 2 so a blind run can never be mistaken for a passing one.
+        if (audit.scanned === 0 || audit.parsed === 0) {
+            if (!flags.json) {
+                console.error('repro-audit: nothing was checked — exiting nonzero rather than reporting a clean run.\n');
+            }
+            process.exit(2);
+        }
+        if ((audit.severity_counts.error || 0) > 0) process.exit(1);
+
             process.exit(2);
         }
 

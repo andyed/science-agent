@@ -1,0 +1,8 @@
+{
+  "gate": {
+    "status": "skipped",
+    "reason": "rate-thinned cache has no shipped number to reproduce; the gate is validated once on the native cache"
+  },
+  "provenance": { "commit": "1234abc" },
+  "thinned_auc": 0.638
+}

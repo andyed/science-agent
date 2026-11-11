@@ -1,0 +1,22 @@
+{
+  "gate": {
+    "status": "ok",
+    "shipped": 0.691,
+    "reproduced": 0.691,
+    "delta": 0.0,
+    "tolerance": 0.0005,
+    "pool": "shipped",
+    "n_records": 9932,
+    "name": "shipped section 4.3 deployable M4-7",
+    "source": "../shipped/summary.json",
+    "source_path": "section_4_3.deployable_M4_7.pooled_auc"
+  },
+  "provenance": {
+    "feature_records_sha256": {
+      "buf7": "3f1a9c0e5b2d8471aa60cf3e9d12b4578e6c0a9f1d3b5e72c84a06f9b1d2e3c4"
+    }
+  },
+  "total_dwell_auc": 0.807,
+  "first_visit_auc": 0.514,
+  "n_rows": 9269
+}
