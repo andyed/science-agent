@@ -20,18 +20,26 @@ jobs:
         with:
           node-version: '20'
       - run: npm ci --omit=dev || npm install --omit=dev
+      - name: src/ modules refuse direct execution; cli.js exit contract
+        run: npm run test:cli-guard
       - name: citation audit smoke
         run: npm run test:citations
+      - name: BibTeX metadata verification (stubbed Crossref, no network)
+        run: npm run test:bib-metadata
       - name: prose rule corpus (must_fire / must_not_fire)
         run: npm run test:prose
       - name: notebook claim grammar (must_resolve / must_fire / floors)
         run: npm run test:notebook
+      - name: reproduction gates (must_fire / floors / zero-sidecar exit)
+        run: npm run test:repro
       - name: manifest version matches package.json
         run: |
           pkg=$(node -p "require('./package.json').version")
           plug=$(node -p "require('./.claude-plugin/plugin.json').version")
           mkt=$(node -p "require('./.claude-plugin/marketplace.json').plugins[0].version || ''")
           echo "package.json=$pkg plugin.json=$plug marketplace.json=$mkt"
+          lock=$(node -p "require('./package-lock.json').version")
+          [ "$pkg" = "$lock" ] || { echo "::error::package-lock.json version $lock != package.json $pkg"; exit 1; }
           [ "$pkg" = "$plug" ] || { echo "::error::plugin.json version $plug != package.json $pkg"; exit 1; }
           if [ -n "$mkt" ] && [ "$mkt" != "$pkg" ]; then
             echo "::error::marketplace.json version $mkt != package.json $pkg"; exit 1
