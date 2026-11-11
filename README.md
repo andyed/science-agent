@@ -181,7 +181,7 @@ Install the whole toolkit — agents, slash commands, CLI — in one step:
 /plugin install andyed/science-agent
 ```
 
-This pulls the repo, installs npm dependencies into the plugin data dir (Node ≥18 required), and registers:
+This pulls the repo and registers the following. There is no install step: the CLI has no npm dependencies and runs from the plugin directory on Node ≥18.
 
 - **Slash commands**: `/science-agent:audit`, `/science-agent:figure-audit`, `/science-agent:repro-audit`, `/science-agent:notebook-audit`, `/science-agent:prose-audit`, `/science-agent:verify`, `/science-agent:search`, `/science-agent:aggregate`, `/science-agent:arxiv`, `/science-agent:arxiv-search`
 - **Sub-agents** (auto-invoked when relevant): `figure-audit`, `rigor-audit`, `repro-gate`
@@ -207,9 +207,9 @@ The CLI must be available on `$PATH` (or via `node cli.js`) for `figure-audit` a
 ## CLI
 
 ```bash
-# Install
+# Clone and run. There are no npm dependencies, so there is nothing to install.
 git clone https://github.com/andyed/science-agent.git
-cd science-agent && npm install
+cd science-agent
 
 # Audit citations and verify every DOI-bearing BibTeX entry against Crossref
 node cli.js audit ./docs/specs --bibtex=./refs.bib
@@ -256,6 +256,8 @@ Every command takes `--json` and prints exactly one JSON document to stdout. `no
 | 2 | Nothing was checked: a path that does not exist, or a `repro-audit` run that scanned zero sidecars |
 
 A missing path never exits 0. `audit` and `aggregate` predate the 1/2 split and report it as 1.
+
+`audit` also exits 1, with no report, when the `--bibtex` file has a syntax error or holds no entries. The message gives `file:line:column` and the entry. A bibliography read in part would let the audit pass on the entries that happened to parse.
 
 ### Audit output
 

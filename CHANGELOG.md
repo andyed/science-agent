@@ -1,5 +1,51 @@
 # Changelog
 
+## Unreleased
+
+- **No runtime dependencies.** `bibtex-parse-js` is replaced by a parser in
+  [`src/bibtex-parser.js`](src/bibtex-parser.js). That package declared `ava`
+  (a 2016 test runner) and `xml2js` as runtime dependencies, so
+  `npm ci --omit=dev` installed 573 packages (55 MB) on macOS, including the
+  deprecated `fsevents@1.2.13` and its install script. Every
+  `npx github:andyed/science-agent` run and every plugin session start paid
+  for that. The production install now adds zero packages.
+- **The plugin has no install step.** The `SessionStart` hook that ran
+  `npm install` into the plugin data directory is removed, and the slash
+  commands no longer set `NODE_PATH`. A `node_modules` directory left in the
+  plugin data directory by an earlier version is unused and can be deleted. CI
+  fails if `package.json` gains a runtime dependency, because the commands
+  would not find it.
+- **A bibliography that cannot be read is an error.** A syntax error is
+  reported as `file:line:column` with the entry it occurred in, and `audit`
+  exits 1 without a report. A `--bibtex` file with no entries (a blank file,
+  only comments, or the wrong file) is refused; the old path returned an empty
+  index and the audit reported `Bib entries: 0` with exit 0.
+- **BibTeX the old parser rejected now parses.** `@string` macros (the library
+  called a method it never defined and threw), macro values such as
+  `journal = cacm`, `#` concatenation with macros, a bare number as the last
+  field when a newline precedes the closing brace (`year = 2020` then `}`),
+  entries delimited by parentheses, and an entry with a key and no fields. An
+  undefined macro keeps its name as the value.
+- **Parsing differences from 0.7.0**, each checked against 56 bibliographies
+  (2,234 entries) with both parsers:
+  - Runs of whitespace inside a value collapse to one space, as BibTeX does. A
+    title wrapped over several source lines is reported on one line.
+  - Field names and entry types are case-insensitive. `AUTHOR` and `Doi` are
+    read; before, only fixed spellings were (`author`/`Author`, `doi`/`DOI`).
+  - A field repeated inside one entry keeps its first value, as BibTeX does.
+    The old parser kept the last.
+  - `@comment` and `@preamble` blocks are skipped. Each used to be indexed as
+    an entry with an empty key, counted in `Bib entries` and reported as
+    `missing_doi`.
+  - A `%` outside a value comments out the rest of the line, so
+    `% @article{...}` stays disabled. The old parser read it as an entry.
+  - Braces are counted whether or not a backslash precedes them, as BibTeX
+    counts them.
+- **`tools/bibtex-eval.js`** pins the above with synthetic fixtures in
+  `test-fixtures/bibtex/`: one file of edge cases, twelve malformed files that
+  must be rejected on a stated line, and three files with no entries that must
+  be refused. It runs in `npm test` and in CI.
+
 ## 0.7.0 (2026-11-10)
 
 First tagged release since 0.1.0; versions 0.2.0–0.6.0 were manifest bumps

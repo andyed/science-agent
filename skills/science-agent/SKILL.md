@@ -9,7 +9,7 @@ Catch AI-confabulated academic citations and claim drift. AI assistants get cita
 
 ## Setup
 
-Runs straight from GitHub with Node ≥18 — no install, no API keys:
+Runs straight from GitHub with Node ≥18 — no install, no npm dependencies, no API keys:
 
 ```bash
 npx github:andyed/science-agent <command>
