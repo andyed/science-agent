@@ -1,0 +1,153 @@
+{
+  "_comment": "Fixtures for tools/bibtex-eval.js. Every bibliography here is synthetic. 'valid' pins what the parser must read; 'invalid' lists files it must reject with an error on the given line; 'empty' lists files with no entries, which parseBibTeX must refuse rather than return an empty index.",
+  "valid": {
+    "file": "edge-cases.bib",
+    "strings": {
+      "jsynth": "Journal of Synthetic Results",
+      "pub": "Fixture Press",
+      "longname": "Journal of Synthetic Results, Series B"
+    },
+    "comments": 3,
+    "preambles": 1,
+    "entries": [
+      {
+        "covers": "upper- and mixed-case entry type and field names, quoted value with a braced quote, macro, bare number, trailing comma, LaTeX accents, 'and others'",
+        "citationKey": "MixedCase2020",
+        "entryType": "article",
+        "entryTags": {
+          "author": "Garc\\'{\\i}a, Ana and M{\\\"u}ller, J{\\\"o}rg and others",
+          "title": "A {B}raced {T}itle with a {\"}quoted{\"} word",
+          "journal": "Journal of Synthetic Results",
+          "year": "2020",
+          "volume": "12",
+          "pages": "101--110",
+          "doi": "10.5555/Mixed.Case"
+        }
+      },
+      {
+        "covers": "nested braces, escaped braces, # concatenation of quoted + macro + braced pieces, month macro, % inside a value, % comment after a field, a commented-out field, last field without a comma",
+        "citationKey": "nested:braces/2021",
+        "entryType": "inproceedings",
+        "entryTags": {
+          "title": "Nested {braces {two {three}} deep} and an escaped \\{ pair \\}",
+          "author": "Quoted, Quinn and {Corporate Author, Inc.}",
+          "booktitle": "Proceedings of Fixture Press Workshop",
+          "year": "2021",
+          "month": "mar",
+          "url": "https://arxiv.org/abs/2101.01234",
+          "note": "100% of the % signs stay",
+          "pages": "7"
+        }
+      },
+      {
+        "covers": "entry delimited by parentheses, parentheses inside a braced value",
+        "citationKey": "parens2019",
+        "entryType": "book",
+        "entryTags": {
+          "title": "A Parenthesised Entry (with parentheses)",
+          "publisher": "Fixture Press",
+          "year": "2019"
+        }
+      },
+      {
+        "covers": "values wrapped over several lines collapse to single spaces; an undefined macro keeps its name",
+        "citationKey": "wrapped",
+        "entryType": "misc",
+        "entryTags": {
+          "title": "A title wrapped over three source lines",
+          "author": "Wrapped, Will and Second, Sam",
+          "howpublished": "undefinedmacro",
+          "year": "2022"
+        }
+      },
+      {
+        "covers": "a repeated field keeps its first value, as BibTeX does",
+        "citationKey": "repeated",
+        "entryType": "misc",
+        "entryTags": {
+          "title": "The first title is kept",
+          "year": "2023"
+        }
+      },
+      {
+        "covers": "an entry with a key and no fields",
+        "citationKey": "bareentry",
+        "entryType": "misc",
+        "entryTags": {}
+      },
+      {
+        "covers": "single-line entry, \\\" outside braces in a quoted value, macro built from another macro, quoted piece # month macro",
+        "citationKey": "quoteescape",
+        "entryType": "article",
+        "entryTags": {
+          "author": "M\\\"uller, Hans",
+          "title": "On {\\\"O}sterreich",
+          "journal": "Journal of Synthetic Results, Series B",
+          "month": "10~jan",
+          "year": "2018"
+        }
+      },
+      {
+        "covers": "braces are counted whether or not a backslash precedes them, as BibTeX counts them",
+        "citationKey": "bracecount",
+        "entryType": "misc",
+        "entryTags": {
+          "title": "A backslash does not hide a brace: \\{ this} closes the group",
+          "year": "2017"
+        }
+      }
+    ],
+    "must_not_contain_keys": ["commentedout", "insidecomment", "barecomment"],
+    "index": {
+      "mixedcase2020": {
+        "authors": ["Garc\\'\\ia, Ana", "M\\\"uller, J\\\"org", "others"],
+        "title": "A Braced Title with a \"quoted\" word",
+        "year": 2020,
+        "journal": "Journal of Synthetic Results",
+        "doi": "10.5555/Mixed.Case",
+        "arxiv": null,
+        "volume": "12",
+        "pages": "101--110"
+      },
+      "nested:braces/2021": {
+        "authors": ["Quoted, Quinn", "Corporate Author, Inc."],
+        "title": "Nested braces two three deep and an escaped \\ pair \\",
+        "year": 2021,
+        "journal": "Proceedings of Fixture Press Workshop",
+        "doi": null,
+        "arxiv": "2101.01234",
+        "volume": null,
+        "pages": "7"
+      },
+      "wrapped": {
+        "authors": ["Wrapped, Will", "Second, Sam"],
+        "title": "A title wrapped over three source lines",
+        "year": 2022,
+        "journal": "",
+        "doi": null,
+        "arxiv": null,
+        "volume": null,
+        "pages": null
+      }
+    }
+  },
+  "invalid": [
+    { "file": "invalid/unterminated-brace.bib", "line": 15, "message": "expected ',' or '}' in @article entry 'broken2021'" },
+    { "file": "invalid/unterminated-brace-at-eof.bib", "line": 12, "message": "never closed with '}'" },
+    { "file": "invalid/unterminated-quote.bib", "line": 11, "message": "never closed with '\"'" },
+    { "file": "invalid/missing-equals.bib", "line": 11, "message": "expected '=' after field 'title'" },
+    { "file": "invalid/missing-comma.bib", "line": 11, "message": "expected ',' or '}'" },
+    { "file": "invalid/missing-value.bib", "line": 11, "message": "expected a value for field 'title'" },
+    { "file": "invalid/missing-key.bib", "line": 9, "message": "no citation key" },
+    { "file": "invalid/missing-open-brace.bib", "line": 9, "message": "'@article' is not followed by '{'" },
+    { "file": "invalid/truncated-entry.bib", "line": 13, "message": "found end of file" },
+    { "file": "invalid/unterminated-comment.bib", "line": 9, "message": "@comment opened here is never closed" },
+    { "file": "invalid/stray-at-sign.bib", "line": 9, "message": "is not followed by '{'" },
+    { "file": "invalid/malformed-string.bib", "line": 9, "message": "expected '=' after @string name" }
+  ],
+  "empty": [
+    "empty/blank.bib",
+    "empty/only-comments.bib",
+    "empty/not-bibtex.txt"
+  ]
+}

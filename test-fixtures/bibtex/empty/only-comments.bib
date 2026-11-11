@@ -1,0 +1,7 @@
+% Synthetic fixture for tools/bibtex-eval.js.
+% Valid BibTeX with no entries: macros, a preamble and comments only.
+% parseBibTeX must refuse it rather than return an empty index.
+@string{jsynth = "Journal of Synthetic Results"}
+@preamble{ "\newcommand{\noopsort}[1]{}" }
+@comment{ @article{disabled, title = {Commented out}, year = 2020} }
+% @article{alsodisabled, title = {Commented out}, year = 2021}

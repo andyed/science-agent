@@ -656,4 +656,13 @@ async function main() {
     }
 }
 
-main().catch(err => { console.error(err); process.exit(1); });
+main().catch(err => {
+    // A bibliography that cannot be read is a user-facing input error: say
+    // where it broke, without a stack trace.
+    if (err && err.name === 'BibTeXParseError') {
+        console.error(`Error: ${err.message}`);
+        process.exit(1);
+    }
+    console.error(err);
+    process.exit(1);
+});

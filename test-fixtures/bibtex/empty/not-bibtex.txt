@@ -1,0 +1,7 @@
+Synthetic fixture for tools/bibtex-eval.js.
+
+This file is prose, not BibTeX. It stands in for the wrong file passed as
+--bibtex: a draft, a CSL JSON export, a README. It has no entries, so
+parseBibTeX must refuse it rather than return an empty index.
+
+Rosenholtz et al. (2012) is cited here in running text only.

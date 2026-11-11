@@ -1,0 +1,13 @@
+% Synthetic fixture for tools/bibtex-eval.js. The first entry is valid; the
+% second is broken. The parser must reject the file, not return one entry.
+@article{good2020,
+  author = {Good, Greta},
+  title = {A Valid Entry},
+  year = 2020
+}
+
+@article{broken2021,
+  author = {Broken, Bo},
+  title = "This quote is never closed,
+  year = {2021}
+}

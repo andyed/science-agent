@@ -1,0 +1,68 @@
+% Synthetic fixture for tools/bibtex-eval.js. Every entry here is invented.
+% A commented-out entry stays out: @article{commentedout, title = {No}, year = 1990}
+Text between entries is ignored, as BibTeX ignores it.
+
+@string{jsynth = "Journal of Synthetic Results"}
+@STRING( pub = {Fixture Press} )
+@string{longname = jsynth # ", Series B"}
+
+@preamble{ "\newcommand{\noopsort}[1]{}" # "\providecommand{\url}[1]{\texttt{#1}}" }
+
+@comment{
+  @article{insidecomment, title = {Not an entry}, year = 1999}
+}
+@Comment{jabref-meta: databaseType:bibtex;}
+@comment a bare comment line @article{barecomment, title = {No}, year = 1991}
+
+@ARTICLE{MixedCase2020,
+  AUTHOR = {Garc\'{\i}a, Ana and M{\"u}ller, J{\"o}rg and others},
+  Title = "A {B}raced {T}itle with a {"}quoted{"} word",
+  JOURNAL = jsynth,
+  Year = 2020,
+  VOLUME = {12},
+  pages = {101--110},
+  DOI = {10.5555/Mixed.Case},
+}
+
+@inproceedings{nested:braces/2021,
+  title = {Nested {braces {two {three}} deep} and an escaped \{ pair \}},
+  author = "Quoted, Quinn and {Corporate Author, Inc.}",
+  booktitle = "Proceedings of " # pub # " " # {Workshop},
+  year = "2021",
+  month = mar,
+  url = {https://arxiv.org/abs/2101.01234},
+  note = {100% of the % signs stay},   % a comment after a field
+  % disabled = {this field is commented out},
+  pages = 7
+}
+
+@book(parens2019,
+  title = {A Parenthesised Entry (with parentheses)},
+  publisher = pub,
+  year = 2019
+)
+
+@misc{wrapped,
+  title = {A title wrapped
+           over three
+           source lines},
+  author = {Wrapped, Will
+            and Second, Sam},
+  howpublished = undefinedmacro,
+  year = {2022}
+}
+
+@misc{repeated,
+  title = {The first title is kept},
+  title = {The second title is ignored},
+  year = 2023
+}
+
+@misc{bareentry}
+
+@article{quoteescape, author = "M\"uller, Hans", title = "On {\"O}sterreich", journal = longname, month = "10~" # jan, year = 2018 }
+
+@misc{bracecount,
+  title = {A backslash does not hide a brace: \{ this} closes the group},
+  year = 2017
+}

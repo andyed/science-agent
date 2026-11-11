@@ -1,39 +1,50 @@
 'use strict';
 
 const fs = require('fs');
-const bibtexParse = require('bibtex-parse-js');
+const { parseBibTeXText, BibTeXParseError } = require('./bibtex-parser');
+
+const stripBraces = value => (value || '').replace(/[{}]/g, '');
 
 /**
  * Parse a BibTeX file into a normalized citation index.
- * Returns Map<string, {id, authors, title, year, journal, doi, arxiv, volume, pages}>
+ * Returns Map<string, {id, authors, title, year, journal, doi, arxiv, volume, pages, raw}>
+ *
+ * Throws BibTeXParseError when the file cannot be read as BibTeX or holds no
+ * entries. Both callers audit against this index, and an empty index makes
+ * every check pass on nothing.
  */
 function parseBibTeX(filepath) {
-    const raw = fs.readFileSync(filepath, 'utf-8');
-    const entries = bibtexParse.toJSON(raw);
+    const text = fs.readFileSync(filepath, 'utf-8');
+    const { entries } = parseBibTeXText(text, { file: filepath });
+    if (entries.length === 0) {
+        throw new BibTeXParseError(
+            'no BibTeX entries found; an audit against an empty bibliography checks nothing',
+            { file: filepath },
+        );
+    }
     const index = new Map();
 
     for (const entry of entries) {
-        const tags = entry.entryTags || {};
-        const id = (entry.citationKey || '').toLowerCase();
+        // Field names arrive lowercased from the parser.
+        const tags = entry.entryTags;
+        const id = entry.citationKey.toLowerCase();
 
         // Parse author string: "Last, First and Last, First" → ["Last, First", ...]
-        const authorStr = (tags.author || tags.Author || '').replace(/[{}]/g, '');
-        const authors = authorStr.split(/\s+and\s+/i).map(a => a.trim()).filter(Boolean);
+        const authors = stripBraces(tags.author).split(/\s+and\s+/i).map(a => a.trim()).filter(Boolean);
 
         // Extract DOI
-        const doi = (tags.doi || tags.DOI || '').replace(/[{}]/g, '').trim() || null;
+        const doi = stripBraces(tags.doi).trim() || null;
 
         // Extract arxiv from URL
         let arxiv = null;
-        const url = (tags.url || tags.URL || '').replace(/[{}]/g, '');
-        const arxivMatch = url.match(/arxiv\.org\/abs\/(\d{4}\.\d{4,5})/);
+        const arxivMatch = stripBraces(tags.url).match(/arxiv\.org\/abs\/(\d{4}\.\d{4,5})/);
         if (arxivMatch) arxiv = arxivMatch[1];
 
-        const title = (tags.title || tags.Title || '').replace(/[{}]/g, '').trim();
-        const year = parseInt(tags.year || tags.Year || '0');
-        const journal = (tags.journal || tags.Journal || tags.booktitle || '').replace(/[{}]/g, '').trim();
-        const volume = (tags.volume || tags.Volume || '').replace(/[{}]/g, '').trim() || null;
-        const pages = (tags.pages || tags.Pages || '').replace(/[{}]/g, '').trim() || null;
+        const title = stripBraces(tags.title).trim();
+        const year = parseInt(tags.year || '0');
+        const journal = stripBraces(tags.journal || tags.booktitle).trim();
+        const volume = stripBraces(tags.volume).trim() || null;
+        const pages = stripBraces(tags.pages).trim() || null;
 
         index.set(id, {
             id,
@@ -72,7 +83,7 @@ function buildLookup(index) {
     return lookup;
 }
 
-module.exports = { parseBibTeX, buildLookup };
+module.exports = { parseBibTeX, buildLookup, BibTeXParseError };
 
 
 // Running a src/ module directly exits 0 and prints nothing, which for an

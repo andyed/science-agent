@@ -8,8 +8,9 @@
   },
   "scripts": {
     "audit": "node cli.js audit",
-    "test": "npm run test:cli-guard && npm run test:citations && npm run test:bib-metadata && npm run test:prose && npm run test:notebook && npm run test:repro",
+    "test": "npm run test:cli-guard && npm run test:bibtex && npm run test:citations && npm run test:bib-metadata && npm run test:prose && npm run test:notebook && npm run test:repro",
     "test:citations": "node cli.js audit ./test-fixtures --bibtex=./test-fixtures/refs.bib --offline",
+    "test:bibtex": "node tools/bibtex-eval.js",
     "test:bib-metadata": "node tools/citation-eval.js",
     "test:prose": "node tools/prose-eval.js",
     "test:notebook": "node tools/notebook-eval.js",
@@ -44,8 +45,5 @@
   ],
   "author": "Andy Edmonds <andyed@gmail.com>",
   "license": "MIT",
-  "type": "commonjs",
-  "dependencies": {
-    "bibtex-parse-js": "^0.0.24"
-  }
+  "type": "commonjs"
 }

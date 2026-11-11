@@ -19,9 +19,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm ci --omit=dev || npm install --omit=dev
+      - name: production install adds no packages
+        # The plugin commands run cli.js straight from the plugin root with no
+        # install step and no NODE_PATH. A runtime dependency would work here
+        # and fail there, so adding one has to fail this step first.
+        run: |
+          npm ci --omit=dev
+          deps=$(node -p "Object.keys(require('./package.json').dependencies || {}).length")
+          [ "$deps" = "0" ] || { echo "::error::package.json declares $deps runtime dependencies; the plugin has no install step"; exit 1; }
+          [ ! -d node_modules ] || [ -z "$(ls node_modules)" ] || { echo "::error::npm ci --omit=dev installed packages: $(ls node_modules | head -5 | tr '\n' ' ')"; exit 1; }
       - name: src/ modules refuse direct execution; cli.js exit contract
         run: npm run test:cli-guard
+      - name: BibTeX parser (edge cases; unreadable input must fail)
+        run: npm run test:bibtex
       - name: citation audit smoke
         run: npm run test:citations
       - name: BibTeX metadata verification (stubbed Crossref, no network)
