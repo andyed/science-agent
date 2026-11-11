@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## 0.7.1 (2026-11-10)
+
+Removes the only runtime dependency, so `npx github:andyed/science-agent` and
+the plugin install nothing. Two `audit` runs that exited 0 on 0.7.0 now exit
+1: a `--bibtex` file that has no entries or cannot be parsed, and a
+bibliography that defines one key twice with different contents.
 
 - **No runtime dependencies.** `bibtex-parse-js` is replaced by a parser in
   [`src/bibtex-parser.js`](src/bibtex-parser.js). That package declared `ava`
