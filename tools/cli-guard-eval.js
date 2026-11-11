@@ -15,6 +15,10 @@
  * module must refuse direct invocation with a non-zero exit and a message
  * naming the real command.
  *
+ * It also pins the entry point's exit contract: --help and --version exit 0,
+ * an unknown command or a bare invocation exits 1, and no path-taking
+ * command exits 0 (or dumps a stack trace) when handed a path that is not there.
+ *
  * Usage:
  *   node tools/cli-guard-eval.js
  */
@@ -39,6 +43,60 @@ function runDirect(file) {
     } catch (err) {
         return { code: err.status, out: (err.stderr || '') + (err.stdout || '') };
     }
+}
+
+function runCli(args) {
+    try {
+        const stdout = execFileSync(process.execPath, [path.join(__dirname, '..', 'cli.js'), ...args], {
+            encoding: 'utf8',
+            stdio: ['ignore', 'pipe', 'pipe'],
+        });
+        return { code: 0, out: stdout, err: '' };
+    } catch (err) {
+        return { code: err.status, out: (err.stdout || ''), err: (err.stderr || '') };
+    }
+}
+
+// The entry point's own exit contract. Help and version are answers, so they
+// exit 0; an unrecognised command or a bare invocation is a mistake and must
+// not look like a run that passed.
+function entryPointFailures() {
+    const version = require('../package.json').version;
+    const cases = [
+        { args: ['--version'], code: 0, stdout: (o) => o.trim() === version, want: `print ${version}` },
+        { args: ['--help'], code: 0, stdout: (o) => /repro-audit/.test(o), want: 'list the commands' },
+        { args: ['not-a-command'], code: 1 },
+        { args: [], code: 1 },
+    ];
+    // A path that does not exist is a typo, never a clean audit. Every
+    // path-taking command must refuse it, without a stack trace.
+    const missing = path.join(__dirname, '..', 'test-fixtures', 'no-such-path');
+    const bib = path.join(__dirname, '..', 'test-fixtures', 'refs.bib');
+    for (const args of [
+        ['audit', missing, `--bibtex=${bib}`, '--offline'],
+        ['notebook-audit', missing],
+        ['aggregate', missing],
+        ['figure-audit', missing],
+        ['repro-audit', missing],
+        ['prose-audit', missing],
+    ]) {
+        cases.push({ args, nonzero: true, stderr: (e) => !/\n\s+at .*\(/.test(e), want: 'fail without a stack trace' });
+    }
+    const failures = [];
+    for (const c of cases) {
+        const label = `cli.js ${c.args.map((a) => path.basename(a)).join(' ') || '(no args)'}`;
+        const { code, out, err } = runCli(c.args);
+        if (c.nonzero ? code === 0 : code !== c.code) {
+            failures.push({
+                case: label,
+                kind: 'exit-code',
+                detail: `exited ${code}, expected ${c.nonzero ? 'nonzero' : c.code}`,
+            });
+        } else if ((c.stdout && !c.stdout(out)) || (c.stderr && !c.stderr(err))) {
+            failures.push({ case: label, kind: 'output', detail: `did not ${c.want}` });
+        }
+    }
+    return { failures, asserted: cases.length };
 }
 
 function run() {
@@ -73,6 +131,10 @@ function run() {
             });
         }
     }
+
+    const entry = entryPointFailures();
+    asserted += entry.asserted;
+    failures.push(...entry.failures);
 
     if (failures.length === 0) {
         console.log(`${GREEN}✓ cli-guard-eval: ${asserted} assertion(s) hold across `

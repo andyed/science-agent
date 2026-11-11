@@ -5,11 +5,8 @@
  * science-agent — Detect AI-confabulated academic citations
  *
  * Usage:
- *   science-agent audit <dir> --bibtex=<path>    Audit citations and verify BibTeX against Crossref
- *   science-agent arxiv [count] [--cat=cs.AI]     Audit recent arXiv papers
- *   science-agent arxiv-search "query"            Search arXiv; surfaces published DOI to verify
- *   science-agent verify <doi>                    Verify a DOI against CrossRef
- *   science-agent search "title query"            Search CrossRef by title
+ *   science-agent <command> [args]   Run `science-agent --help` for the full
+ *                                    command list; usage() below is canonical.
  *
  * Examples:
  *   science-agent audit ./docs/specs --bibtex=./docs/arxiv-paper/references.bib
@@ -23,7 +20,7 @@ const fs = require('fs');
 const args = process.argv.slice(2);
 const command = args[0];
 
-function usage() {
+function usage(exitCode = 1) {
     console.log(`
 science-agent — Detect AI-confabulated academic citations
 
@@ -48,22 +45,30 @@ Usage:
                                                    muriel.aiism when available)
     --severity=warn                               Exit nonzero at this severity (info|warn|error)
     --no-pencil                                   Don't skip pencil-locked sentences
-  science-agent repro-audit <dir-or-sidecar>    Check producers reproduce a shipped number before reporting a new one
-    --require-gate                                Treat an ungated producer as an error, not a warning
-    --verbose                                     List every sidecar instead of collapsing the ungated ones
     --no-muriel                                   Skip the Python muriel.aiism pass (native only)
     --no-native                                   Skip the native ARS rule set (muriel only)
   science-agent figure-audit <INDEX.md>         Verify figure caption numerics against summary.json sidecars
+  science-agent repro-audit <dir-or-sidecar>    Check producers reproduce a shipped number before reporting a new one
+    --require-gate                                Treat an ungated producer as an error, not a warning
+    --verbose                                     List every sidecar instead of collapsing the ungated ones
 
 Options:
   --json           Output as JSON
   --verbose        Show all citations, not just issues
+  -h, --help       Show this help
+  -v, --version    Print the version
 `);
-    process.exit(1);
+    process.exit(exitCode);
 }
 
 async function main() {
     if (!command) usage();
+    // Asking for help is not an error; an unknown command (below) still is.
+    if (command === 'help' || command === '--help' || command === '-h') usage(0);
+    if (command === 'version' || command === '--version' || command === '-v') {
+        console.log(require('./package.json').version);
+        return;
+    }
 
     const flags = {};
     const positional = [];
@@ -94,6 +99,10 @@ async function main() {
 
         const resolvedDir = path.resolve(dir);
         const resolvedBibtex = path.resolve(bibtex);
+        if (!fs.existsSync(resolvedDir)) {
+            console.error(`Error: directory not found: ${resolvedDir}`);
+            process.exit(1);
+        }
         const { auditDirectory } = require('./src/audit');
         const citationResult = auditDirectory(resolvedDir, resolvedBibtex);
 
@@ -415,13 +424,14 @@ async function main() {
     } else if (command === 'notebook-audit') {
         const dir = positional[0] || '.';
 
-        // Graceful degradation: check if the directory has any [NB##:K##] references
+        // A directory with no [NB##:K##] references degrades gracefully below:
+        // the repo may simply not use the convention. A path that does not
+        // exist is a different case — it is a typo, and exiting 0 on it let a
+        // CI step pass having read nothing.
         const targetDir = path.resolve(dir);
         if (!fs.existsSync(targetDir)) {
-            console.log(`\n  ℹ Directory not found: ${targetDir}`);
-            console.log(`  This command audits [NB##:K##] claim references in prose files.`);
-            console.log(`  See: science-agent aggregate --help for setting up Key Claims.\n`);
-            process.exit(0);
+            console.error(`notebook-audit: not found: ${targetDir}`);
+            process.exit(2);
         }
 
         const { auditNotebookClaims, auditCrossRepo } = require('./src/notebook-audit');
@@ -534,16 +544,6 @@ async function main() {
         const totErr = audit.figures.reduce((n, f) => n + (f.error ? 1 : 0), 0);
         if (totMis > 0 || totErr > 0) process.exit(1);
 
-    } else if (command === 'prose-audit') {
-        const target = positional[0];
-        if (!target) {
-            console.error('usage: science-agent prose-audit <file-or-dir> [--severity=warn] [--respect-pencil] [--summary] [--json]');
-            process.exit(2);
-        }
-        const { auditProse, auditDirectory, formatReport, formatSummary } = require('./src/prose-audit');
-        const targetPath = path.resolve(target);
-        if (!fs.existsSync(targetPath)) {
-            console.error(`prose-audit: not found: ${targetPath}`);
     } else if (command === 'repro-audit') {
         const target = positional[0];
         if (!target) {
@@ -579,6 +579,16 @@ async function main() {
         }
         if ((audit.severity_counts.error || 0) > 0) process.exit(1);
 
+    } else if (command === 'prose-audit') {
+        const target = positional[0];
+        if (!target) {
+            console.error('usage: science-agent prose-audit <file-or-dir> [--severity=warn] [--respect-pencil] [--summary] [--json]');
+            process.exit(2);
+        }
+        const { auditProse, auditDirectory, formatReport, formatSummary } = require('./src/prose-audit');
+        const targetPath = path.resolve(target);
+        if (!fs.existsSync(targetPath)) {
+            console.error(`prose-audit: not found: ${targetPath}`);
             process.exit(2);
         }
 
