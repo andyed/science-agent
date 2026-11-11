@@ -1,0 +1,48 @@
+% Synthetic fixture for tools/bibtex-eval.js. Every entry here is invented.
+% Three citation keys are defined more than once; one is defined once.
+
+@article{dup2020,
+  author = {First, Fay},
+  title = {The First Definition Is Kept},
+  year = 2020
+}
+
+@article{copy2021,
+  author = {Copy, Cal},
+  title = {An Exact Copy},
+  year = 2021
+}
+
+@article{unique2022,
+  author = {Unique, Una},
+  title = {Defined Once},
+  year = 2022
+}
+
+% Keys compare without regard to case, so this repeats dup2020.
+@article{Dup2020,
+  author = {Second, Sol},
+  title = {The Second Definition Is Reported and Not Audited},
+  year = 2020
+}
+
+@article{copy2021,
+  author = {Copy, Cal},
+  title = {An Exact Copy},
+  year = 2021
+}
+
+@misc{triple2019,
+  title = {Three Definitions},
+  year = 2019
+}
+
+@misc{triple2019,
+  title = {Three Definitions},
+  year = 2019
+}
+
+@book{triple2019,
+  title = {Three Definitions},
+  year = 2019
+}

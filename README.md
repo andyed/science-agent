@@ -46,6 +46,7 @@ Catches AI-confabulated academic citations before they ship. Verifies inline ref
 | Wrong DOI | CrossRef DOI resolution — checks that the DOI points to the claimed paper |
 | Compound confabulation | CrossRef + title search detects merged citations |
 | Ambiguous citation | Surname+year collision detection across BibTeX entries |
+| Duplicate citation key | A key defined more than once keeps its first entry, as BibTeX does; the repeat is reported (`duplicate_key`), as an error when the entries differ |
 | Orphan citation | Inline reference with no BibTeX entry |
 
 ### Notebook Claim Verification (shipped)

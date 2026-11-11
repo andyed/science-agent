@@ -1,5 +1,5 @@
 {
-  "_comment": "Fixtures for tools/bibtex-eval.js. Every bibliography here is synthetic. 'valid' pins what the parser must read; 'invalid' lists files it must reject with an error on the given line; 'empty' lists files with no entries, which parseBibTeX must refuse rather than return an empty index.",
+  "_comment": "Fixtures for tools/bibtex-eval.js. Every bibliography here is synthetic. 'valid' pins what the parser must read; 'invalid' lists files it must reject with an error on the given line; 'empty' lists files with no entries, which parseBibTeX must refuse rather than return an empty index; 'duplicates' pins which entry a repeated citation key keeps and how the repeat is reported.",
   "valid": {
     "file": "edge-cases.bib",
     "strings": {
@@ -130,6 +130,20 @@
         "pages": null
       }
     }
+  },
+  "duplicates": {
+    "file": "duplicate-keys.bib",
+    "keys": ["dup2020", "copy2021", "unique2022", "triple2019"],
+    "kept_titles": {
+      "dup2020": "The First Definition Is Kept",
+      "copy2021": "An Exact Copy",
+      "triple2019": "Three Definitions"
+    },
+    "duplicateKeys": [
+      { "id": "dup2020", "lines": [4, 23], "identical": false, "severity": "error" },
+      { "id": "copy2021", "lines": [10, 29], "identical": true, "severity": "warn" },
+      { "id": "triple2019", "lines": [35, 40, 45], "identical": false, "severity": "error" }
+    ]
   },
   "invalid": [
     { "file": "invalid/unterminated-brace.bib", "line": 15, "message": "expected ',' or '}' in @article entry 'broken2021'" },

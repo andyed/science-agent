@@ -196,6 +196,37 @@ function issue(entry, type, severity, message, actual = null) {
 }
 
 /**
+ * One issue per citation key that the bibliography defines more than once.
+ * Only the first entry is in the index (BibTeX and biber keep the first too),
+ * so every other check in the audit ran on that entry alone. When the dropped
+ * entries differ from it, the audit did not read something the author wrote:
+ * an error. Exact copies lose nothing: a warning.
+ *
+ * Needs no network, so `audit --offline` reports it as well.
+ */
+function duplicateKeyIssues(index, bibtexPath) {
+    const file = path.resolve(bibtexPath);
+    return (index.duplicateKeys || []).map(({ id, lines, identical }) => {
+        const entry = { ...index.get(id), file };
+        const later = lines.slice(1).join(', ');
+        const many = lines.length > 2;
+        let rest;
+        if (identical) {
+            rest = many
+                ? `the entries on lines ${later} are exact copies`
+                : `the entry on line ${later} is an exact copy`;
+        } else {
+            rest = many
+                ? `the entries on lines ${later} were not checked and at least one differs from it`
+                : `the entry on line ${later} differs from it and was not checked`;
+        }
+        const message = `Citation key "${id}" is defined ${lines.length} times (lines ${lines.join(', ')}). `
+            + `Only the entry on line ${lines[0]} was audited, as BibTeX uses only the first; ${rest}`;
+        return { ...issue(entry, 'duplicate_key', identical ? 'warn' : 'error', message), lines, identical };
+    });
+}
+
+/**
  * Dereference every DOI in a BibTeX file and compare the returned identity
  * metadata with the entry. This is deliberately separate from the local prose
  * scan: references.bib is evidence to verify, never a trusted ground truth.
@@ -210,7 +241,8 @@ async function auditBibTeX(bibtexPath, options = {}) {
         file: path.resolve(bibtexPath),
         doi: normalizeDOI(entry.doi),
     }));
-    const issues = [];
+    const issues = duplicateKeyIssues(index, bibtexPath);
+    const duplicateKey = issues.length;
 
     const doiOwners = new Map();
     for (const entry of entries) {
@@ -391,6 +423,7 @@ async function auditBibTeX(bibtexPath, options = {}) {
             unverified,
             invalidDOI: invalidDOIs.length,
             duplicateDOI: [...doiOwners.values()].filter(owners => owners.length > 1).length,
+            duplicateKey,
             issueCount: issues.length,
         },
     };
@@ -401,6 +434,7 @@ module.exports = {
     authorFamilies,
     compareAuthors,
     compareTitles,
+    duplicateKeyIssues,
     normalizeDOI,
     normalizeText,
     titleSimilarity,

@@ -20,6 +20,15 @@
   exits 1 without a report. A `--bibtex` file with no entries (a blank file,
   only comments, or the wrong file) is refused; the old path returned an empty
   index and the audit reported `Bib entries: 0` with exit 0.
+- **A citation key defined more than once is reported as `duplicate_key`.**
+  The index holds one entry per key, so a repeat was dropped without a word
+  and never audited. The issue lists every line. It is an error when the
+  dropped entry differs from the kept one, because the audit did not read
+  something the author wrote, and a warning when it is an exact copy. It needs
+  no network, so `audit --offline` reports it too, and an error-level repeat
+  makes `audit` exit 1. `bibtex.stats` in `--json` output gains
+  `duplicateKey`. The kept entry is now the first, as in BibTeX and biber; it
+  was the last. Keys compare case-insensitively.
 - **BibTeX the old parser rejected now parses.** `@string` macros (the library
   called a method it never defined and threw), macro values such as
   `journal = cacm`, `#` concatenation with macros, a bare number as the last
@@ -43,8 +52,8 @@
     counts them.
 - **`tools/bibtex-eval.js`** pins the above with synthetic fixtures in
   `test-fixtures/bibtex/`: one file of edge cases, twelve malformed files that
-  must be rejected on a stated line, and three files with no entries that must
-  be refused. It runs in `npm test` and in CI.
+  must be rejected on a stated line, three files with no entries that must be
+  refused, and one file of repeated keys. It runs in `npm test` and in CI.
 
 ## 0.7.0 (2026-11-10)
 

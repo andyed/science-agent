@@ -9,6 +9,8 @@
  *              normalized index rows, and none of the commented-out keys
  *   invalid  → each file is rejected with a BibTeXParseError on the stated line
  *   empty    → each file with no entries is refused by parseBibTeX
+ *   duplicates → a repeated citation key keeps its first entry and is
+ *              reported as duplicate_key, online and with --offline
  *   cli      → `audit --bibtex=<bad file>` exits non-zero, names the file, and
  *              prints no stack trace and no report
  *
@@ -29,6 +31,7 @@ const fs = require('fs');
 const path = require('path');
 const { parseBibTeXText, BibTeXParseError } = require('../src/bibtex-parser');
 const { parseBibTeX, buildLookup } = require('../src/bibtex');
+const { auditBibTeX, duplicateKeyIssues } = require('../src/bib-audit');
 
 const ROOT = path.join(__dirname, '..');
 const FIXTURE_DIR = path.join(ROOT, 'test-fixtures', 'bibtex');
@@ -191,6 +194,72 @@ function emptyCases(empty) {
     }
 }
 
+// A repeated key drops an entry from the index. That is only acceptable if the
+// audit says so: these cases fail if the repeat goes unreported, or if the
+// entry kept is not the one BibTeX keeps.
+async function duplicateCases(dup) {
+    const file = path.join(FIXTURE_DIR, dup.file);
+    let index = null;
+    check(`${dup.file} builds an index`, () => { index = parseBibTeX(file); });
+    if (!index) return;
+
+    check('each key is indexed once, in order of first definition', () => {
+        assert.deepStrictEqual([...index.keys()], dup.keys);
+    });
+    check('a repeated key keeps its first entry', () => {
+        for (const [id, title] of Object.entries(dup.kept_titles)) {
+            assert.strictEqual(index.get(id).title, title, id);
+            assert.strictEqual(index.get(id).raw.line, dup.duplicateKeys.find(d => d.id === id).lines[0], id);
+        }
+    });
+    check('repeats are listed with every line and whether they differ', () => {
+        assert.deepStrictEqual(index.duplicateKeys,
+            dup.duplicateKeys.map(({ id, lines, identical }) => ({ id, lines, identical })));
+    });
+    check('a bibliography without repeats lists none', () => {
+        assert.deepStrictEqual(parseBibTeX(path.join(FIXTURE_DIR, 'edge-cases.bib')).duplicateKeys, []);
+    });
+
+    const expected = dup.duplicateKeys.map(({ id, severity, lines }) => ({ citation: id, severity, lines }));
+    const shape = issues => issues.filter(i => i.type === 'duplicate_key')
+        .map(({ citation, severity, lines }) => ({ citation, severity, lines }));
+
+    check('duplicate_key issues: differing repeats are errors, exact copies are warnings', () => {
+        const issues = duplicateKeyIssues(index, file);
+        assert.deepStrictEqual(shape(issues), expected);
+        for (const issue of issues) {
+            assert.strictEqual(issue.file, file);
+            for (const line of issue.lines) assert(issue.message.includes(String(line)), issue.message);
+        }
+    });
+
+    // No entry in the fixture has a DOI, so the verifier must never be called.
+    let audit = null;
+    try {
+        audit = await auditBibTeX(file, { verifyDOI: () => { throw new Error('unexpected Crossref request'); } });
+    } catch (err) {
+        audit = err;
+    }
+    check('auditBibTeX reports duplicate_key and counts it', () => {
+        assert(!(audit instanceof Error), audit.message);
+        assert.deepStrictEqual(shape(audit.issues), expected);
+        assert.strictEqual(audit.stats.duplicateKey, expected.length);
+        assert.strictEqual(audit.stats.total, dup.keys.length);
+    });
+
+    check('cli audit --offline reports duplicate_key and exits 1', () => {
+        const { code, out } = runCli(['audit', path.join(ROOT, 'test-fixtures'), `--bibtex=${file}`, '--offline', '--json']);
+        assert.strictEqual(code, 1, `exited ${code}; a differing repeat is an error`);
+        const result = JSON.parse(out);
+        assert.deepStrictEqual(shape(result.issues), expected);
+        assert.strictEqual(result.bibtex.stats.duplicateKey, expected.length);
+    });
+    check('cli audit --offline prints each repeated key', () => {
+        const { out } = runCli(['audit', path.join(ROOT, 'test-fixtures'), `--bibtex=${file}`, '--offline']);
+        for (const { id } of dup.duplicateKeys) assert(out.includes(`[duplicate_key] ${id}`), `${id} not printed`);
+    });
+}
+
 function cliCases(manifest) {
     const dir = path.join(ROOT, 'test-fixtures');
     const bad = [manifest.invalid[0].file, ...manifest.empty];
@@ -214,17 +283,18 @@ function cliCases(manifest) {
     });
 }
 
-function run() {
+async function run() {
     const manifest = JSON.parse(fs.readFileSync(MANIFEST, 'utf-8'));
     validCases(manifest.valid);
     invalidCases(manifest.invalid);
     emptyCases(manifest.empty);
+    await duplicateCases(manifest.duplicates);
     cliCases(manifest);
 
     if (failures.length === 0) {
         console.log(`${GREEN}✓ bibtex-eval: ${asserted} assertion(s) hold `
             + `(${manifest.valid.entries.length} entries, ${manifest.invalid.length} invalid, `
-            + `${manifest.empty.length} empty).${RESET}\n`);
+            + `${manifest.empty.length} empty, ${manifest.duplicates.duplicateKeys.length} repeated keys).${RESET}\n`);
         return 0;
     }
 
@@ -236,4 +306,7 @@ function run() {
     return 1;
 }
 
-process.exit(run());
+run().then(code => process.exit(code)).catch(err => {
+    console.error(`bibtex-eval failed: ${err.stack || err.message}`);
+    process.exit(1);
+});

@@ -109,12 +109,17 @@ async function main() {
         let bibtexResult;
         if (flags.offline) {
             const { parseBibTeX } = require('./src/bibtex');
-            const entries = [...parseBibTeX(resolvedBibtex).values()];
+            const { duplicateKeyIssues } = require('./src/bib-audit');
+            const index = parseBibTeX(resolvedBibtex);
+            const entries = [...index.values()];
+            // A repeated citation key is found by reading the file, not by
+            // asking Crossref, so the offline run reports it too.
+            const offlineIssues = duplicateKeyIssues(index, resolvedBibtex);
             bibtexResult = {
                 skipped: true,
                 reason: '--offline',
                 entries: [],
-                issues: [],
+                issues: offlineIssues,
                 stats: {
                     total: entries.length,
                     withDOI: entries.filter(entry => entry.doi).length,
@@ -125,7 +130,8 @@ async function main() {
                     unverified: 0,
                     invalidDOI: 0,
                     duplicateDOI: 0,
-                    issueCount: 0,
+                    duplicateKey: offlineIssues.length,
+                    issueCount: offlineIssues.length,
                 },
             };
         } else {

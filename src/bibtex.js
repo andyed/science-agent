@@ -12,6 +12,13 @@ const stripBraces = value => (value || '').replace(/[{}]/g, '');
  * Throws BibTeXParseError when the file cannot be read as BibTeX or holds no
  * entries. Both callers audit against this index, and an empty index makes
  * every check pass on nothing.
+ *
+ * A citation key defined more than once keeps its first entry, as BibTeX and
+ * biber do; keys compare case-insensitively. The later entries are not in the
+ * index, so they are listed on the returned Map as
+ *   index.duplicateKeys = [{ id, lines: [first, ...later], identical }]
+ * for the audit to report. `identical` is false when a dropped entry differs
+ * from the kept one in type or in any field.
  */
 function parseBibTeX(filepath) {
     const text = fs.readFileSync(filepath, 'utf-8');
@@ -23,11 +30,22 @@ function parseBibTeX(filepath) {
         );
     }
     const index = new Map();
+    const repeats = new Map(); // id -> { id, lines, identical }
+    const signature = entry => JSON.stringify([entry.entryType, entry.entryTags]);
 
     for (const entry of entries) {
         // Field names arrive lowercased from the parser.
         const tags = entry.entryTags;
         const id = entry.citationKey.toLowerCase();
+
+        if (index.has(id)) {
+            const kept = index.get(id).raw;
+            if (!repeats.has(id)) repeats.set(id, { id, lines: [kept.line], identical: true });
+            const repeat = repeats.get(id);
+            repeat.lines.push(entry.line);
+            if (signature(entry) !== signature(kept)) repeat.identical = false;
+            continue;
+        }
 
         // Parse author string: "Last, First and Last, First" → ["Last, First", ...]
         const authors = stripBraces(tags.author).split(/\s+and\s+/i).map(a => a.trim()).filter(Boolean);
@@ -60,6 +78,7 @@ function parseBibTeX(filepath) {
         });
     }
 
+    index.duplicateKeys = [...repeats.values()];
     return index;
 }
 
