@@ -2,13 +2,17 @@
 
 Cross-project backlog lives in `~/Documents/dev/backlog.md`; this file is science-agent-specific.
 
-## Native-Node shared lib (unblock `prose-audit` everywhere)
+## Native-Node shared lib
 
 Factor a shared Node library out of the commands — the move DeepMind made with `scienceskillscommon` in google-deepmind/science-skills.
 
-**Why:** `prose-audit` is excluded from the Claude Code plugin and the skills.sh skill because its rule table lives in `muriel` (Python). Shipping it would force a Python install on every user. Port the `muriel.aiism` rule engine to native Node (the rule kinds are already partly reimplemented in `src/prose-audit.js`) so prose-audit runs with zero Python, then add it to the plugin command list and the `skills/science-agent/SKILL.md` command table.
+**Why:** each auditor re-grows the same pieces: directory walk, `summary.json` reading (including Python's `NaN`/`Infinity` dialect, which only `repro-audit` handles), severity counting, report formatting, and the zero-parse guard. `figure-audit` and `repro-audit` both read sidecars and do not share a reader.
 
-**Scope:** native ports of the rule-kind engines; keep the licensed rule sources (proselint BSD-3-Clause; first-party AllSERP rules) and drop the CC-BY-SA-4.0 dependency path entirely. See CHANGELOG 0.4.0–0.6.0 for the licensing history.
+**Done already:** the original motivation — porting the `muriel.aiism` rule engine so `prose-audit` runs without Python — shipped; `prose-audit` is in the plugin and muriel is an optional pass. See CHANGELOG 0.4.0–0.7.0 for the licensing history.
+
+## Exit-code consistency
+
+`figure-audit`, `repro-audit`, `prose-audit` and `notebook-audit` exit 2 when nothing was checked; `audit` and `aggregate` exit 1 for a missing path. Move those two to 2 in a release that can call it out as a breaking change for CI scripts.
 
 ## Skill-creator meta-skill (Phase 4 claim-audit + future expansion)
 

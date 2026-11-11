@@ -89,6 +89,32 @@ If your project uses the `[NB##:K##]` Key Claims convention:
             --notebooks=./notebooks
 ```
 
+### With reproduction gates
+
+If your analysis scripts write `summary.json` sidecars with a `gate` block
+(see [`agents/repro-gate.md`](../agents/repro-gate.md)):
+
+```yaml
+      - name: Audit reproduction gates
+        run: npx github:andyed/science-agent repro-audit ./scripts/output
+```
+
+The step fails on a gate whose delta exceeds its tolerance, an undocumented
+skip, or a pin whose cited source has moved. Ungated producers are warnings;
+add `--require-gate` to fail on them. A run that finds no sidecars exits 2, so
+a wrong path cannot pass.
+
+### With prose linting
+
+```yaml
+      - name: Lint draft prose
+        run: npx github:andyed/science-agent prose-audit ./paper --severity=error
+```
+
+`--severity=error` fails only on error-level rules, which include an authority
+claim (`studies show`) with no citation in the same paragraph. The default
+bar is `warn`.
+
 ### arXiv spot-check (scheduled)
 
 Run a weekly check on recent papers in your field to calibrate your expectations:

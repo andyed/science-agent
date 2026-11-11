@@ -87,6 +87,56 @@ Detects:
 
 If you don't use notebooks or don't need claim tracking, ignore this — `audit` and `verify` work standalone. If you do, see the full setup guide: **[docs/notebook-conventions.md](docs/notebook-conventions.md)**
 
+### Figure Caption Verification (shipped)
+
+A figure gets regenerated; its caption keeps the old numbers. `figure-audit` reads an `INDEX.md`, finds each figure's `summary.json` sidecar, extracts the numerics from the caption prose, and reports each as matched, unverified, or mismatched against the stats dump.
+
+```bash
+science-agent figure-audit ./figures/INDEX.md
+```
+
+### Reproduction Gates (shipped)
+
+The audits above are consumer-side: they check prose against what a producer wrote. None of them sees a script that computes a new number on a code path that can no longer reproduce its already-published one. The prose then quotes a wrong value faithfully and every other audit passes.
+
+A gated producer recomputes a shipped number on the same inputs before reporting anything new, aborts if it does not come back, and records the outcome in its `summary.json`:
+
+```json
+"gate": {
+  "status": "ok",
+  "shipped": 0.691, "reproduced": 0.691, "delta": 0.0, "tolerance": 5e-4,
+  "source": "scripts/output/m4_cursor_only_downstream/summary.json",
+  "source_path": "section_4_3.deployable_M4_7.pooled_auc"
+}
+```
+
+`repro-audit` reads those blocks across an output tree:
+
+```bash
+science-agent repro-audit ./scripts/output
+science-agent repro-audit ./scripts/output --require-gate   # every producer must be gated
+```
+
+| Finding | Severity | Meaning |
+|---------|----------|---------|
+| `gate_failed` | error | Delta exceeds tolerance. The comparison is recomputed, so a block claiming `ok` with a blown delta still fires |
+| `stale_pin` | error | The gate passes, but the cited source no longer carries the pinned value |
+| `gate_skipped_undocumented` | error | Skipped with no stated reason |
+| `ungated` | warn (error under `--require-gate`) | Numbers reported with no gate |
+| `uncited_pin` | warn | Pinned to a literal instead of `source` + `source_path`, so staleness cannot be checked |
+
+A run that scans zero sidecars exits 2 instead of reporting a clean result. Full contract: [`agents/repro-gate.md`](agents/repro-gate.md).
+
+### Prose Audit (shipped)
+
+`prose-audit` lints `.md`, `.tex`, and `.ipynb` drafts for patterns that mark machine-written prose: significance inflation, copula avoidance, sentence fragments, em-dash and semicolon density, repeated phrases. One rule is a rigor check: `weasel-attribution` fires at `error` when an authority phrase (`studies show`, `it is widely believed`) has no citation in the same paragraph.
+
+```bash
+science-agent prose-audit ./paper --summary
+```
+
+Rules live in [`src/aiism-rules.json`](src/aiism-rules.json) and run in Node with no Python dependency. Each rule has `must_fire` and `must_not_fire` fixtures in [`test-fixtures/prose/`](test-fixtures/prose/).
+
 ### Works with any AI coding assistant
 
 Science Agent is a CLI tool — any assistant that can run shell commands can use it. No API keys, no plugins, no vendor lock-in.
@@ -121,7 +171,7 @@ For any agent that supports [skills.sh](https://skills.sh) — Claude Code, Curs
 npx skills add andyed/science-agent
 ```
 
-This installs [`skills/science-agent/SKILL.md`](skills/science-agent/SKILL.md), which teaches the agent when and how to drive the CLI (`audit`, `verify`, `search`, `arxiv-search`, `notebook-audit`, `figure-audit`) plus the find→verify pattern. The CLI runs via `npx github:andyed/science-agent`, so there's nothing else to install.
+This installs [`skills/science-agent/SKILL.md`](skills/science-agent/SKILL.md), which teaches the agent when and how to drive the CLI (`audit`, `verify`, `search`, `arxiv-search`, `notebook-audit`, `figure-audit`, `repro-audit`, `prose-audit`) plus the find→verify pattern. The CLI runs via `npx github:andyed/science-agent`, so there's nothing else to install.
 
 ### Claude Code plugin (recommended)
 
@@ -133,12 +183,12 @@ Install the whole toolkit — agents, slash commands, CLI — in one step:
 
 This pulls the repo, installs npm dependencies into the plugin data dir (Node ≥18 required), and registers:
 
-- **Slash commands**: `/science-agent:audit`, `/science-agent:figure-audit`, `/science-agent:notebook-audit`, `/science-agent:prose-audit`, `/science-agent:verify`, `/science-agent:search`, `/science-agent:aggregate`, `/science-agent:arxiv`, `/science-agent:arxiv-search`
-- **Sub-agents** (auto-invoked when relevant): `figure-audit`, `rigor-audit`
+- **Slash commands**: `/science-agent:audit`, `/science-agent:figure-audit`, `/science-agent:repro-audit`, `/science-agent:notebook-audit`, `/science-agent:prose-audit`, `/science-agent:verify`, `/science-agent:search`, `/science-agent:aggregate`, `/science-agent:arxiv`, `/science-agent:arxiv-search`
+- **Sub-agents** (auto-invoked when relevant): `figure-audit`, `rigor-audit`, `repro-gate`
 
 `prose-audit` runs a **native Node engine** — its rule set lives in [`src/aiism-rules.json`](src/aiism-rules.json) (first-party threshold rules plus MIT-compatible ported rules) with detectors in [`src/prose-audit.js`](src/prose-audit.js), so it ships in the plugin with **no Python dependency**. An optional [`muriel`](https://github.com/andyed/muriel) (Python) pass adds extra rules when `python3` + `muriel` are present; pass `--no-muriel` to skip it, or `--no-native` to skip the built-in rules.
 
-A planned fourth agent — `claim-audit` — will cover semantic claim correctness (does the cited paper actually say this?). It slots into `agents/` when [Phase 4 of `PLAN.md`](PLAN.md#phase-4-claim-auditor-content-accuracy) ships.
+A planned `claim-audit` agent will cover semantic claim correctness (does the cited paper actually say this?). It slots into `agents/` when [Phase 4 of `PLAN.md`](PLAN.md#phase-4-claim-auditor-content-accuracy) ships.
 
 ### Claude Code agents (manual install — pre-plugin pattern)
 
@@ -149,9 +199,10 @@ mkdir -p .claude/agents
 curl -o .claude/agents/science-agent.md https://raw.githubusercontent.com/andyed/science-agent/main/agent.md
 curl -o .claude/agents/rigor-audit.md   https://raw.githubusercontent.com/andyed/science-agent/main/agents/rigor-audit.md
 curl -o .claude/agents/figure-audit.md  https://raw.githubusercontent.com/andyed/science-agent/main/agents/figure-audit.md
+curl -o .claude/agents/repro-gate.md    https://raw.githubusercontent.com/andyed/science-agent/main/agents/repro-gate.md
 ```
 
-The CLI must be available on `$PATH` (or via `node cli.js`) for `figure-audit` to work — the plugin path handles this automatically.
+The CLI must be available on `$PATH` (or via `node cli.js`) for `figure-audit` and `repro-gate` to work — the plugin path handles this automatically.
 
 ## CLI
 
@@ -180,7 +231,31 @@ node cli.js verify 10.1038/nn.2889
 
 # Search CrossRef by title
 node cli.js search "Metamers of the ventral stream"
+
+# Search arXiv; surfaces a preprint's published DOI ready to verify
+node cli.js arxiv-search "peripheral vision crowding" --max=5
+
+# Verify figure-caption numerics against summary.json sidecars
+node cli.js figure-audit ./figures/INDEX.md
+
+# Check that producers reproduced a shipped number before reporting a new one
+node cli.js repro-audit ./scripts/output
+
+# Lint drafts for AI-tell prose
+node cli.js prose-audit ./paper --summary
 ```
+
+Every command takes `--json` and prints exactly one JSON document to stdout. `node cli.js --help` lists all flags.
+
+### Exit codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | Ran and found nothing at the failing severity |
+| 1 | Findings at error severity (`prose-audit --severity=` moves the bar; default `warn`) |
+| 2 | Nothing was checked: a path that does not exist, or a `repro-audit` run that scanned zero sidecars |
+
+A missing path never exits 0. `audit` and `aggregate` predate the 1/2 split and report it as 1.
 
 ### Audit output
 
