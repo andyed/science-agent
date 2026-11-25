@@ -41,7 +41,10 @@
     "agent.md",
     "docs/",
     "README.md",
-    "CHANGELOG.md"
+    "CHANGELOG.md",
+    "commands/",
+    "agents/",
+    "skills/"
   ],
   "author": "Andy Edmonds <andyed@gmail.com>",
   "license": "MIT",
