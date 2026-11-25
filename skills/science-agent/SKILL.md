@@ -1,6 +1,6 @@
 ---
 name: science-agent
-description: Verify what AI writes about science — catch confabulated citations, drifted notebook numbers, stale figure captions, and analysis producers that report a new number without reproducing a shipped one. Use when adding or reviewing academic citations, BibTeX entries, DOIs, or empirical claims in .md/.tex/.bib/.ipynb files; when writing a literature review; when reporting numbers from an analysis pipeline after a refactor, port, or substrate change; or when the user says "check citations", "verify references", "audit", or "science-agent".
+description: Verify what AI writes about science — catch confabulated citations, drifted notebook numbers, stale figure captions, and analysis producers that report a new number without reproducing a shipped one. Use when checking a proposed correction against its cited source, adding or reviewing academic citations, BibTeX entries, DOIs, or empirical claims in .md/.tex/.bib/.ipynb files; when writing a literature review; when reporting numbers from an analysis pipeline after a refactor, port, or substrate change; or when the user says "check citations", "verify references", "audit", or "science-agent".
 ---
 
 # Science Agent
@@ -58,6 +58,10 @@ Add `--json` to any command for machine-readable output.
 
 Do not describe an `--offline` audit as citation metadata verification. It only
 checks whether inline author/year citations map to local BibTeX entries.
+
+## Recheck a proposed correction
+
+Before marking a scientific claim fixed, review the exact replacement wording against the cited primary source. Use [Recheck a claim fix](references/recheck-fix.md) for the evidence, arithmetic and closure decision. Run this review again whenever the wording or cited evidence changes.
 
 ## The reproduction gate
 

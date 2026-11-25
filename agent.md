@@ -50,6 +50,10 @@ For every academic citation you encounter or generate:
 3. If the paper is in the local PDF corpus (`docs/research/`): read the PDF and check metadata
 4. If uncertain: **say so explicitly** — "I'm not confident this citation is correct. Please verify: [details]"
 
+## Closing a corrected claim
+
+Recheck the replacement against its primary source before marking the claim fixed. Return the exact sentence, the supporting passage and its location, and any arithmetic with units. Keep the finding open if the source contradicts any part or leaves it unsupported. The portable skill includes the [full review procedure](skills/science-agent/references/recheck-fix.md).
+
 ## What to flag
 
 - `[CONFABULATED]` — title, authors, or DOI don't match the real paper

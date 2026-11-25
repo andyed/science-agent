@@ -187,6 +187,8 @@ Also catches:
 
 ### 4.3 Verification Workflow
 
+For a proposed correction, the agent workflow now [rechecks the replacement sentence](skills/science-agent/references/recheck-fix.md) before allowing a fixed verdict. The batch extraction and persistence workflow below is still planned.
+
 Claims are extracted → written to `claims.json` → user marks each `verified: true/false/fixed`.
 On subsequent runs, only new/changed claims are flagged. Verified claims are cached with a content hash so they're re-flagged if the surrounding text changes.
 

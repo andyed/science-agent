@@ -184,10 +184,12 @@ Install the whole toolkit — agents, slash commands, CLI — in one step:
 
 This pulls the repo and registers the following. There is no install step: the CLI has no npm dependencies and runs from the plugin directory on Node ≥18.
 
-- **Slash commands**: `/science-agent:audit`, `/science-agent:figure-audit`, `/science-agent:repro-audit`, `/science-agent:notebook-audit`, `/science-agent:prose-audit`, `/science-agent:verify`, `/science-agent:search`, `/science-agent:aggregate`, `/science-agent:arxiv`, `/science-agent:arxiv-search`
+- **Slash commands**: `/science-agent:recheck-fix`, `/science-agent:audit`, `/science-agent:figure-audit`, `/science-agent:repro-audit`, `/science-agent:notebook-audit`, `/science-agent:prose-audit`, `/science-agent:verify`, `/science-agent:search`, `/science-agent:aggregate`, `/science-agent:arxiv`, `/science-agent:arxiv-search`
 - **Sub-agents** (auto-invoked when relevant): `figure-audit`, `rigor-audit`, `repro-gate`
 
 `prose-audit` runs a **native Node engine** — its rule set lives in [`src/aiism-rules.json`](src/aiism-rules.json) (first-party threshold rules plus MIT-compatible ported rules) with detectors in [`src/prose-audit.js`](src/prose-audit.js), so it ships in the plugin with **no Python dependency**. An optional [`muriel`](https://github.com/andyed/muriel) (Python) pass adds extra rules when `python3` + `muriel` are present; pass `--no-muriel` to skip it, or `--no-native` to skip the built-in rules.
+
+To verify a correction, run `/science-agent:recheck-fix <replacement sentence or file location> <citation>`, or ask the portable skill to recheck the fix. The reviewer reads the primary source, quotes the decisive passage, shows any arithmetic and reports whether every part of the replacement is supported. [Review procedure](skills/science-agent/references/recheck-fix.md)
 
 A planned `claim-audit` agent will cover semantic claim correctness (does the cited paper actually say this?). It slots into `agents/` when [Phase 4 of `PLAN.md`](PLAN.md#phase-4-claim-auditor-content-accuracy) ships.
 

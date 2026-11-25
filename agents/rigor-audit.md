@@ -24,6 +24,8 @@ You will be given a set of files (usually a `git diff` or list of changed files)
 - Are causal claims made from correlational data? Flag the direction.
 - Is the framing honest about what was NOT found (nulls, failed hypotheses)?
 
+When a finding has a proposed correction, check the exact revised sentence against the primary source before marking it fixed. Follow [Recheck a claim fix](../skills/science-agent/references/recheck-fix.md). Return the source passage, locator, and any arithmetic. Keep the finding open if any part is contradicted or lacks evidence.
+
 ### 2. Metric consistency
 - Check against `docs/metrics-reference.md` — are metrics named consistently?
 - Are deprecated metric names used anywhere? (e.g., "eval rate" instead of "gaze dwell ratio")
